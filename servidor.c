@@ -30,10 +30,10 @@ void settings(){
 }
 
 void chamaVerificador(){
-	int pid=fork();
+	int pid=fork(), estado;
 	if(pid==0)
 		execl("verificador","verificador",WORDSNOT,NULL);
-	//wait(&pid);
+	wait(&estado);
 }
 
 int main(int argc, char *argv[]){   
@@ -82,7 +82,7 @@ int main(int argc, char *argv[]){
 		//User em questao
 	}
 	else if(strcmp(comando,"shutdown")==0 && comandoAux[1]==NULL)
-		break;
+		continue;
 	else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL)
 		printf("Introduziu comando %s\n", comando);
 	else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
