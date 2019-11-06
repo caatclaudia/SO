@@ -49,7 +49,7 @@ int main(int argc, char *argv[]){
     comandosmenu();
 
     do{
-		chamaVerificador();
+		//chamaVerificador(); <----- colocar noutro sítio, impede de sair do ciclo dos comandos
 		fflush(stdout);
 			printf("\nIntroduza um comando: ");
 		fgets(comando,60,stdin);
@@ -64,10 +64,10 @@ int main(int argc, char *argv[]){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//diferenciar on e off
 		}
-		else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL){
-			printf("Introduziu comando %s\n", comando);}
-		else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL){
-			printf("Introduziu comando %s\n", comando);}
+		else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL)
+			printf("Introduziu comando %s\n", comando);
+		else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL)
+			printf("Introduziu comando %s\n", comando);
 		else if(strcmp(comando,"msg")==0 && comandoAux[1]==NULL)
 			printf("Introduziu comando %s\n", comando);
 		else if(strcmp(comando,"topic")==0 && comandoAux[1]!=NULL){
@@ -84,7 +84,7 @@ int main(int argc, char *argv[]){
 		}
 		else if(strcmp(comando,"shutdown")==0 && comandoAux[1]==NULL){
 			FLAG_SHUTDOWN = 1;
-			printf("\n\n ===========Servidor vai desligar==========\n");
+			printf("\n\n ===========Servidor vai desligar==========\n\n");
 		}
 		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL)
 			printf("Introduziu comando %s\n", comando);
