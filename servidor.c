@@ -38,7 +38,7 @@ void chamaVerificador(){
 
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[20];
-    int num;
+    int num, FLAG_SHUTDOWN = 0;
 
     if(getenv("MAXNOT") != NULL)
         nmaxnot = atoi(getenv("MAXNOT"));
@@ -47,49 +47,53 @@ int main(int argc, char *argv[]){
 
     settings();
     comandosmenu();
-    do{
-	chamaVerificador();
-	fflush(stdout);
-        printf("\nIntroduza um comando: ");
-	fgets(comando,60,stdin);
-        comando[strlen(comando) - 1] = '\0';
-	num=0;	
-	comandoAux[num]=strtok(comando," ");
-	num++;
-	while((comandoAux[num]=strtok(NULL," "))!=NULL)
-		num++;
 
-	if(strcmp(comando, "filter")==0 && comandoAux[1]!=NULL){
-		printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
-		//diferenciar on e off
-	}
-	else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL)
-		printf("Introduziu comando %s\n", comando);
-	else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL)
-		printf("Introduziu comando %s\n", comando);
-	else if(strcmp(comando,"msg")==0 && comandoAux[1]==NULL)
-		printf("Introduziu comando %s\n", comando);
-	else if(strcmp(comando,"topic")==0 && comandoAux[1]!=NULL){
-		printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
-		//Topico em questao
-	}
-	else if(strcmp(comando,"del")==0 && comandoAux[1]!=NULL){
-		printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
-		//Mensagem em questao
-	}
-	else if(strcmp(comando,"kick")==0 && comandoAux[1]!=NULL){
-		printf("Introduziu comando %%s %s\n", comando, comandoAux[1]);
-		//User em questao
-	}
-	else if(strcmp(comando,"shutdown")==0 && comandoAux[1]==NULL)
-		continue;
-	else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL)
-		printf("Introduziu comando %s\n", comando);
-	else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
-		comandosmenu();
-	else
-		printf("[ERRO]Comando invalido!\n");
-	
-    }while (strcmp(comando, "shutdown")!= 0);
+    do{
+		chamaVerificador();
+		fflush(stdout);
+			printf("\nIntroduza um comando: ");
+		fgets(comando,60,stdin);
+			comando[strlen(comando) - 1] = '\0';
+		num=0;	
+		comandoAux[num]=strtok(comando," ");
+		num++;
+		while((comandoAux[num]=strtok(NULL," "))!=NULL)
+			num++;
+
+		if(strcmp(comando, "filter")==0 && comandoAux[1]!=NULL){
+			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
+			//diferenciar on e off
+		}
+		else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL){
+			printf("Introduziu comando %s\n", comando);}
+		else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL){
+			printf("Introduziu comando %s\n", comando);}
+		else if(strcmp(comando,"msg")==0 && comandoAux[1]==NULL)
+			printf("Introduziu comando %s\n", comando);
+		else if(strcmp(comando,"topic")==0 && comandoAux[1]!=NULL){
+			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
+			//Topico em questao
+		}
+		else if(strcmp(comando,"del")==0 && comandoAux[1]!=NULL){
+			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
+			//Mensagem em questao
+		}
+		else if(strcmp(comando,"kick")==0 && comandoAux[1]!=NULL){
+			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
+			//User em questao
+		}
+		else if(strcmp(comando,"shutdown")==0 && comandoAux[1]==NULL){
+			FLAG_SHUTDOWN = 1;
+			printf("\n\n ===========Servidor vai desligar==========\n");
+		}
+		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL)
+			printf("Introduziu comando %s\n", comando);
+		else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
+			comandosmenu();
+		else{
+			FLAG_SHUTDOWN = 0;
+			printf("\n[ERRO] Comando invalido!\n");
+		}
+    }while (FLAG_SHUTDOWN != 1);
     return EXIT_SUCCESS;
 }
