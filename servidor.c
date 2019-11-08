@@ -2,7 +2,8 @@
 #include<stdlib.h>
 #include<unistd.h>
 #include<string.h>
-#include <sys/wait.h>
+#include<sys/wait.h>
+#include<sys/stat.h>
 #include"header.h"
 
 void comandosmenu(){
@@ -49,8 +50,7 @@ int main(int argc, char *argv[]){
 		perror("\nmkfifo do FIFO do servidor deu erro");
 		//exit(EXIT_FAILURE);
 	}
-	//fd_ser = open(FIFO_SERV, O_RDWR);
-	//fd_ser = open(FIFO_SERV, O_RDONLY);
+	fd_ser = open(FIFO_SERV, O_RDWR);
 
     if(getenv("MAXNOT") != NULL)
         nmaxnot = atoi(getenv("MAXNOT"));
@@ -61,11 +61,11 @@ int main(int argc, char *argv[]){
     comandosmenu();
 
     do{
-		chamaVerificador();
+		//chamaVerificador();
 		fflush(stdout);
-			printf("\nIntroduza um comando: ");
+		printf("\nIntroduza um comando: ");
 		fgets(comando,60,stdin);
-			comando[strlen(comando) - 1] = '\0';
+		comando[strlen(comando) - 1] = '\0';
 		num=0;	
 		comandoAux[num]=strtok(comando," ");
 		num++;
@@ -107,8 +107,10 @@ int main(int argc, char *argv[]){
 			printf("\n[ERRO] Comando invalido!\n");
 		}
     }while (FLAG_SHUTDOWN != 1);
-	remove(FIFO_SERV); //funciona!
-	fclose(fd_ser);
-	unlink(FIFO_SERV);
+
+    remove(FIFO_SERV); //funciona!
+    close(fd_ser);
+    unlink(FIFO_SERV);
+    
     return EXIT_SUCCESS;
 }

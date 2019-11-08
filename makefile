@@ -7,7 +7,7 @@ cliente:
 	
 gestor:
 	gcc -c servidor.c
-	gcc header.h servidor.c -o servidor
+	gcc header.h servidor.c -o gestor
 	
 
 verificador:
@@ -15,10 +15,19 @@ verificador:
 	gcc verificador.c -o verificador
 
 
-clean:
-	rm cliente
-	rm servidor
-	rm verificador
-	rm cliente.o
+clean: cleang cleanc cleanv
+	
+
+cleang: 
+	rm gestor
 	rm servidor.o
+
+
+cleanc:
+	rm cliente
+	rm cliente.o
+
+
+cleanv:
+	rm verificador
 	rm verificador.o
