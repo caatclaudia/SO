@@ -1,3 +1,4 @@
+#include <fcntl.h>
 int nmaxnot = 5;
 int nmaxmsg = 15;
 
@@ -9,6 +10,8 @@ int nmaxmsg = 15;
 #define TAM 50
 #define NLINHAS 15
 #define NCOLUNAS 67
+#define FIFO_SERV    "SERV"
+#define FIFO_CLI    "CLI%d" // pid do cliente
 
 typedef struct utilizador{
     char username[TAM];

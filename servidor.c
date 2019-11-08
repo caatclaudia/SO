@@ -15,7 +15,7 @@ void comandosmenu(){
     printf("Listar mensagens de um topico (topic ____ )\n");
     printf("Apagar mensagem (del ____ ) \n");
     printf("Excluir um utilizador (kick ___ )\n");
-    printf("Desligra o gestor (shutdown)\n");
+    printf("Desligar o gestor (shutdown)\n");
     printf("Eliminar topicos sem mensagens (prune) \n");
     printf("===============================\n\n");
 }
@@ -33,12 +33,24 @@ void chamaVerificador(){
 	int pid=fork(), estado;
 	if(pid==0)
 		execl("verificador","verificador",WORDSNOT,NULL);
-	wait(&estado);
+	kill(pid, SIGKILL);
 }
 
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[20];
-    int num, FLAG_SHUTDOWN = 0;
+    int num, FLAG_SHUTDOWN = 0, fd_ser,res;
+
+	//if(access(FIFO_SERV, F_OK)==0) { //verificar se o sv esta aberto
+    //     fprintf(stderr, "[ERROR] Server ja existe.\n");
+    //     exit(1);
+	// }
+	res = mkfifo(FIFO_SERV, 0600);
+	if(res == -1){
+		perror("\nmkfifo do FIFO do servidor deu erro");
+		//exit(EXIT_FAILURE);
+	}
+	//fd_ser = open(FIFO_SERV, O_RDWR);
+	//fd_ser = open(FIFO_SERV, O_RDONLY);
 
     if(getenv("MAXNOT") != NULL)
         nmaxnot = atoi(getenv("MAXNOT"));
@@ -49,7 +61,7 @@ int main(int argc, char *argv[]){
     comandosmenu();
 
     do{
-		//chamaVerificador(); <----- colocar noutro sítio, impede de sair do ciclo dos comandos
+		chamaVerificador();
 		fflush(stdout);
 			printf("\nIntroduza um comando: ");
 		fgets(comando,60,stdin);
@@ -95,5 +107,8 @@ int main(int argc, char *argv[]){
 			printf("\n[ERRO] Comando invalido!\n");
 		}
     }while (FLAG_SHUTDOWN != 1);
+	remove(FIFO_SERV); //funciona!
+	fclose(fd_ser);
+	unlink(FIFO_SERV);
     return EXIT_SUCCESS;
 }
