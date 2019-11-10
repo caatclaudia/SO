@@ -34,3 +34,8 @@ typedef struct editar{
     int linha; //y
     int coluna; //x
 }edit;
+
+typedef struct pedido{
+	char palavra[20];
+	int remetente;
+}PEDIDO;
