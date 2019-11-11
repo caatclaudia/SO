@@ -8,7 +8,7 @@
 
 int main(int argc, char *argv[]){
 	
-	char fifo_name[20], str[20];
+	/*char fifo_name[20], str[20];
         int fd_ser, fd_cli;
 	PEDIDO p;
 	if(access(FIFO_SERV, F_OK)!=0) {
@@ -34,7 +34,7 @@ int main(int argc, char *argv[]){
 	}while(strcmp(p.palavra,"sair")!=0);
 
 	close(fd_ser);
-	unlink(fifo_name);
+	unlink(fifo_name);*/
 
 	return EXIT_SUCCESS;
 }

@@ -30,7 +30,7 @@ void settings(){
     printf("=========================================\n\n");
 }
 
-void chamaVerificador(){
+void chamaVerificador(char *comandoAux[500]){
 	int pid=fork(), estado;
 	if(pid==0)
 		execl("verificador","verificador",WORDSNOT,NULL);
@@ -38,9 +38,9 @@ void chamaVerificador(){
 }
 
 int main(int argc, char *argv[]){   
-    char comando[60], *comandoAux[20], fifo_name[20];
+    char comando[60], *comandoAux[500], fifo_name[20];
     int num, FLAG_SHUTDOWN = 0, fd_ser, fd_cli, res;
-    fd_set fontes;
+    /*fd_set fontes;
     PEDIDO p;
 
 	if(access(FIFO_SERV, F_OK)==0) { //verificar se o sv esta aberto
@@ -49,9 +49,9 @@ int main(int argc, char *argv[]){
 	 }
 	if(mkfifo(FIFO_SERV, 0600) == -1){
 		perror("\nmkfifo do FIFO do servidor deu erro");
-		//exit(EXIT_FAILURE);
+		exit(EXIT_FAILURE);
 	}
-	fd_ser = open(FIFO_SERV, O_RDWR);
+	fd_ser = open(FIFO_SERV, O_RDWR);*/
 
     if(getenv("MAXNOT") != NULL)
         nmaxnot = atoi(getenv("MAXNOT"));
@@ -62,16 +62,16 @@ int main(int argc, char *argv[]){
     comandosmenu();
 	
     do{
-	FD_ZERO(&fontes);
+	/*FD_ZERO(&fontes);
         FD_SET(0, &fontes);
         FD_SET(fd_ser, &fontes);
-        res = select(fd_ser + 1, &fontes, NULL, NULL, NULL);
+        res = select(fd_ser + 1, &fontes, NULL, NULL, NULL);*/
 
 	fflush(stdout);
 	printf("\nIntroduza um comando: ");
 	
 	
-	if(res>0 && FD_ISSET(fd_ser, &fontes)) {		//FIFO
+	/*if(res>0 && FD_ISSET(fd_ser, &fontes)) {		//FIFO
 		read(fd_ser, &p, sizeof(PEDIDO));
 		printf("Recebi %s\n\n", p.palavra);
 
@@ -79,18 +79,24 @@ int main(int argc, char *argv[]){
 		fd_cli = open(fifo_name, O_WRONLY);
 		write(fd_cli, &p, sizeof(PEDIDO));
 		close(fd_cli);
-    	}
+    	}*/
 
-    	if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
-		//chamaVerificador();
+    	//if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
 		fgets(comando,60,stdin);
 		comando[strlen(comando) - 1] = '\0';
-		num=0;	
+		num=0;
 		comandoAux[num]=strtok(comando," ");
-		num++;
-		while((comandoAux[num]=strtok(NULL," "))!=NULL)
+		if(strcmp(comando,"mensagem")!=0){
 			num++;
-
+			while((comandoAux[num]=strtok(NULL," "))!=NULL)
+				num++;
+		}
+		else{
+			num++;
+			while((comandoAux[num]=strtok(NULL,"\0"))!=NULL)
+				num++;
+		}
+		
 		if(strcmp(comando, "filter")==0 && comandoAux[1]!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//diferenciar on e off
@@ -121,16 +127,21 @@ int main(int argc, char *argv[]){
 			printf("Introduziu comando %s\n", comando);
 		else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
 			comandosmenu();
+		else if(strcmp(comando,"mensagem")==0 && comandoAux[1]!=NULL){
+			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
+			//Enviar mensagem ao verificador
+			//chamaVerificador(comandoAux);
+		}
 		else{
 			FLAG_SHUTDOWN = 0;
 			printf("\n[ERRO] Comando invalido!\n");
 		}
-	}
+	//}
     }while (FLAG_SHUTDOWN != 1);
 
-    remove(FIFO_SERV); //funciona!
+    /*remove(FIFO_SERV); //funciona!
     close(fd_ser);
-    unlink(FIFO_SERV);
+    unlink(FIFO_SERV);*/
     
     return EXIT_SUCCESS;
 }
