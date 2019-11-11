@@ -30,11 +30,24 @@ void settings(){
     printf("=========================================\n\n");
 }
 
-void chamaVerificador(char *comandoAux[500]){
-	int pid=fork(), estado;
-	if(pid==0)
+void chamaVerificador(char *frase){
+	int p[2], estado, num;
+	printf("\n\n%s\n\n", frase);
+
+	pipe(p);
+	int res=fork();
+	if(res==0){
+		close(0);//FECHAR ACESSO AO TECLADO
+		dup(p[0]);//DUPLICAR P[0] NA PRIMEIRA POSICAO DISPONIVEL
+		close(p[0]);//FECHAR EXTREMIDADE DE LEITURA DO PIPE
+		close(p[1]);//FECHAR EXTREMIDADE DE ESCRITA DO PIPE
 		execl("verificador","verificador",WORDSNOT,NULL);
-	kill(pid, SIGKILL);
+	}
+	close(p[0]);
+	write(p[1], frase, strlen(frase));
+	write(p[1], "\n", 1);
+	close(p[1]);
+	wait(&estado);
 }
 
 int main(int argc, char *argv[]){   
@@ -97,7 +110,7 @@ int main(int argc, char *argv[]){
 				num++;
 		}
 		
-		if(strcmp(comando, "filter")==0 && comandoAux[1]!=NULL){
+		if(strcmp(comando, "filter")==0 && comandoAux!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//diferenciar on e off
 		}
@@ -111,11 +124,11 @@ int main(int argc, char *argv[]){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//Topico em questao
 		}
-		else if(strcmp(comando,"del")==0 && comandoAux[1]!=NULL){
+		else if(strcmp(comando,"del")==0 && comandoAux!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//Mensagem em questao
 		}
-		else if(strcmp(comando,"kick")==0 && comandoAux[1]!=NULL){
+		else if(strcmp(comando,"kick")==0 && comandoAux!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//User em questao
 		}
@@ -127,13 +140,12 @@ int main(int argc, char *argv[]){
 			printf("Introduziu comando %s\n", comando);
 		else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
 			comandosmenu();
-		else if(strcmp(comando,"mensagem")==0 && comandoAux[1]!=NULL){
+		else if(strcmp(comando,"mensagem")==0 && comandoAux!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//Enviar mensagem ao verificador
-			//chamaVerificador(comandoAux);
+			chamaVerificador(comandoAux[1]);
 		}
 		else{
-			FLAG_SHUTDOWN = 0;
 			printf("\n[ERRO] Comando invalido!\n");
 		}
 	//}
