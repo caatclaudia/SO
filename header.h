@@ -1,9 +1,9 @@
 #include <fcntl.h>
 int nmaxnot = 5;
 int nmaxmsg = 15;
-
+char fileWN[20]="palavras.txt";
 #define MAXMSG nmaxmsg
-#define WORDSNOT "palavras.txt"
+#define WORDSNOT fileWN
 #define MAXNOT nmaxnot
 #define MAXCHAR 1000
 #define TIMEOUT 10

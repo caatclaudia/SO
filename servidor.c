@@ -24,9 +24,9 @@ void comandosmenu(){
 void settings(){
     printf("\n===========Configuracoes Iniciais======\n");
     printf("Numero de palavras proibidas: %d\n", nmaxnot);
-    printf("Numero maximo de mensagens a armazenar: %d\n", MAXMSG);
+    printf("Numero maximo de mensagens a armazenar: %d\n", nmaxmsg);
     printf("Valor de Timeout: %d\n", TIMEOUT);
-    printf("Nome de ficheiro de palavras proibidas: %s\n",WORDSNOT);
+    printf("Nome de ficheiro de palavras proibidas: %s\n",fileWN);
     printf("=========================================\n\n");
 }
 
@@ -70,6 +70,10 @@ int main(int argc, char *argv[]){
         nmaxnot = atoi(getenv("MAXNOT"));
     if(getenv("MAXMSG") != NULL)
         nmaxmsg = atoi(getenv("MAXMSG"));
+	if(getenv("WORDSNOT") != NULL){
+		strcpy(fileWN, getenv("WORDSNOT"));
+	}
+        
 
     settings();
     comandosmenu();
