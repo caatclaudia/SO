@@ -34,6 +34,6 @@ typedef struct editar{
 }edit;
 
 typedef struct pedido{
-	char palavra[20];
+	char frase[MAXCHAR];
 	int remetente;
 }PEDIDO;
