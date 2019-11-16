@@ -1,4 +1,4 @@
-all: cliente gestor verificador clean
+all: cliente gestor verificador
 
 cliente:
 	gcc -c cliente.c
