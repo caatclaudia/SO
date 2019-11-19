@@ -53,18 +53,19 @@ void chamaVerificador(char *frase){
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[500], fifo_name[20];
     int num, FLAG_SHUTDOWN = 0, fd_ser, fd_cli, res;
-    /*fd_set fontes;
+    fd_set fontes;
     PEDIDO p;
+    struct timeval t;
 
 	if(access(FIFO_SERV, F_OK)==0) { //verificar se o sv esta aberto
-       	fprintf(stderr, "[ERROR] Server ja existe.\n");
+       		fprintf(stderr, "[ERROR] Server ja existe.\n");
          	return EXIT_FAILURE;
 	 }
 	if(mkfifo(FIFO_SERV, 0600) == -1){
 		perror("\nmkfifo do FIFO do servidor deu erro");
 		exit(EXIT_FAILURE);
 	}
-	fd_ser = open(FIFO_SERV, O_RDWR);*/
+	fd_ser = open(FIFO_SERV, O_RDWR);
 
     if(getenv("MAXNOT") != NULL)
         nmaxnot = atoi(getenv("MAXNOT"));
@@ -79,26 +80,30 @@ int main(int argc, char *argv[]){
     comandosmenu();
 	
     do{
-	/*FD_ZERO(&fontes);
-        FD_SET(0, &fontes);
-        FD_SET(fd_ser, &fontes);
-        res = select(fd_ser + 1, &fontes, NULL, NULL, NULL);*/
-
 	fflush(stdout);
 	printf("\nIntroduza um comando: ");
+	fflush(stdout);
+
+	FD_ZERO(&fontes);
+        FD_SET(0, &fontes);
+        FD_SET(fd_ser, &fontes);
+	t.tv_sec=20;
+	t.tv_usec=0;
+        res = select(fd_ser + 1, &fontes, NULL, NULL, &t);
+
 	
-	
-	/*if(res>0 && FD_ISSET(fd_ser, &fontes)) {		//FIFO
+	if(res>0 && FD_ISSET(fd_ser, &fontes)) {		//FIFO
 		read(fd_ser, &p, sizeof(PEDIDO));
-		printf("Recebi %s\n\n", p.palavra);
+		printf("Interrompido...\nRecebi %s\n\n", p.frase);
+		chamaVerificador(p.frase);
 
 		sprintf(fifo_name, FIFO_CLI, p.remetente);
 		fd_cli = open(fifo_name, O_WRONLY);
 		write(fd_cli, &p, sizeof(PEDIDO));
 		close(fd_cli);
-    	}*/
+    	}
 
-    	//if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
+    	else if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
 		fgets(comando,60,stdin);
 		comando[strlen(comando) - 1] = '\0';
 		num=0;
@@ -152,12 +157,16 @@ int main(int argc, char *argv[]){
 		else{
 			printf("\n[ERRO] Comando invalido!\n");
 		}
-	//}
+	}
+	else if(res==0){
+		printf("TIMEOUT\n\n");
+		FLAG_SHUTDOWN=1;
+	}
     }while (FLAG_SHUTDOWN != 1);
 
-    /*remove(FIFO_SERV); //funciona!
+    remove(FIFO_SERV); //funciona!
     close(fd_ser);
-    unlink(FIFO_SERV);*/
+    unlink(FIFO_SERV);
     
     return EXIT_SUCCESS;
 }

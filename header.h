@@ -10,8 +10,9 @@ char fileWN[20]="palavras.txt";
 #define TAM 50
 #define NLINHAS 15
 #define NCOLUNAS 67
-#define FIFO_SERV    "SERV"
-#define FIFO_CLI    "CLI%d" // pid do cliente
+
+#define FIFO_SERV "SERV"
+#define FIFO_CLI "CLI%d"
 
 typedef struct utilizador{
     char username[TAM];
@@ -36,6 +37,6 @@ typedef struct editar{
 }edit;
 
 typedef struct pedido{
-	char palavra[20];
+	char frase[MAXCHAR];
 	int remetente;
 }PEDIDO;

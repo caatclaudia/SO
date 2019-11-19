@@ -8,9 +8,10 @@
 
 int main(int argc, char *argv[]){
 	
-	/*char fifo_name[20], str[20];
+	char fifo_name[20];
         int fd_ser, fd_cli;
 	PEDIDO p;
+
 	if(access(FIFO_SERV, F_OK)!=0) {
         	printf("[ERRO] Nao ha nenhum servidor!\n");
         	return EXIT_FAILURE;
@@ -18,23 +19,30 @@ int main(int argc, char *argv[]){
 	sprintf(fifo_name, FIFO_CLI, getpid());
     	p.remetente = getpid();
 	
-    	mkfifo(fifo_name, 0600);
+	if(access(fifo_name, F_OK)==0) {
+       		fprintf(stderr, "[ERROR] Cli ja existe.\n");
+         	return EXIT_FAILURE;
+	 }
+	if(mkfifo(fifo_name, 0600) == -1){
+		perror("\nmkfifo do FIFO do cliente deu erro");
+		exit(EXIT_FAILURE);
+	}
+
 	fd_ser = open(FIFO_SERV, O_WRONLY); // escrita
 
 	do{
 		printf(">> ");
-		scanf("%s", str);
-		strcpy(p.palavra,str);
-
+		fgets(p.frase,MAXCHAR,stdin);
 		write(fd_ser, &p, sizeof(PEDIDO));
 
 		fd_cli = open(fifo_name, O_RDONLY);
 		read(fd_cli, &p, sizeof(PEDIDO));
 		close(fd_cli);
-	}while(strcmp(p.palavra,"sair")!=0);
+		fflush(stdout);
+	}while(strcmp(p.frase, "sair")!=0);		//NAO ESTA A FUNCIONAR
 
 	close(fd_ser);
-	unlink(fifo_name);*/
+	unlink(fifo_name);
 
 	return EXIT_SUCCESS;
 }
