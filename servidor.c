@@ -52,7 +52,8 @@ void chamaVerificador(char *frase){
 
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[500], fifo_name[20];
-    int num, FLAG_SHUTDOWN = 0, fd_ser, fd_cli, res;
+    int num, fd_ser, fd_cli, res;
+    int FLAG_SHUTDOWN = 0, FLAG_FILTER=1;
     fd_set fontes;
     PEDIDO p;
     struct timeval t;
@@ -93,14 +94,16 @@ int main(int argc, char *argv[]){
 
 	
 	if(res>0 && FD_ISSET(fd_ser, &fontes)) {		//FIFO
-		read(fd_ser, &p, sizeof(PEDIDO));
-		printf("Interrompido...\nRecebi %s\n\n", p.frase);
-		chamaVerificador(p.frase);
+			read(fd_ser, &p, sizeof(PEDIDO));
+			printf("Interrompido...\nRecebi '%s'\n\n", p.frase);
+			if(FLAG_FILTER==1)			
+			chamaVerificador(p.frase);
 
-		sprintf(fifo_name, FIFO_CLI, p.remetente);
-		fd_cli = open(fifo_name, O_WRONLY);
-		write(fd_cli, &p, sizeof(PEDIDO));
-		close(fd_cli);
+			sprintf(fifo_name, FIFO_CLI, p.remetente);
+			fd_cli = open(fifo_name, O_WRONLY);
+			write(fd_cli, &p, sizeof(PEDIDO));
+			close(fd_cli);
+		
     	}
 
     	else if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
@@ -121,32 +124,48 @@ int main(int argc, char *argv[]){
 		
 		if(strcmp(comando, "filter")==0 && comandoAux!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
-			//diferenciar on e off
+
+			if(strcmp(comandoAux[1],"on")==0)
+				FLAG_FILTER=1;
+			else if(strcmp(comandoAux[1],"off")==0)
+				FLAG_FILTER=0;
 		}
-		else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL)
+		else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL){
 			printf("Introduziu comando %s\n", comando);
-		else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL)
+			//LISTAR USERS
+		}
+		else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL){
 			printf("Introduziu comando %s\n", comando);
-		else if(strcmp(comando,"msg")==0 && comandoAux[1]==NULL)
+			//LISTAR TOPICOS
+		}
+		else if(strcmp(comando,"msg")==0 && comandoAux[1]==NULL){
 			printf("Introduziu comando %s\n", comando);
+			//LISTAR MENSAGENS
+		}
 		else if(strcmp(comando,"topic")==0 && comandoAux[1]!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//Topico em questao
+			//LISTAR MENSAGENS DESTE TOPICO
 		}
 		else if(strcmp(comando,"del")==0 && comandoAux!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//Mensagem em questao
+			//APAGAR ESTA MENSAGEM
 		}
 		else if(strcmp(comando,"kick")==0 && comandoAux!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//User em questao
+			//EXCLUIR USER
 		}
 		else if(strcmp(comando,"shutdown")==0 && comandoAux[1]==NULL){
 			FLAG_SHUTDOWN = 1;
 			printf("\n\n ===========Servidor vai desligar==========\n\n");
+			//AVISAR CLIENTES
 		}
-		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL)
+		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL){
 			printf("Introduziu comando %s\n", comando);
+			//APAGAR TOPICOS SEM MENSAGENS
+		}
 		else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
 			comandosmenu();
 		else if(strcmp(comando,"mensagem")==0 && comandoAux!=NULL){
