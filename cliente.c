@@ -118,6 +118,8 @@ int main(int argc, char *argv[]){
 	}
 
 	fd_ser = open(FIFO_SERV, O_WRONLY); // escrita
+	
+	fd_cli = open(fifo_name, O_RDWR);
 
 	do{
 		do{		
@@ -152,9 +154,7 @@ int main(int argc, char *argv[]){
 			strcpy(nova.corpo,p.frase);
 			write(fd_ser, &p, sizeof(PEDIDO));
 	
-			fd_cli = open(fifo_name, O_RDONLY);
 			read(fd_cli, &p, sizeof(PEDIDO));
-			close(fd_cli);
 			fflush(stdout);	
 		
 			//ESCREVER MENSAGEM
@@ -174,6 +174,7 @@ int main(int argc, char *argv[]){
 		fflush(stdout);
 	}while(op!=6);
 
+	close(fd_cli);
 	close(fd_ser);
 	unlink(fifo_name);
 
