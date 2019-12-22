@@ -51,30 +51,6 @@ void chamaVerificador(char *frase){
 	wait(&estado);
 }
 
-/*int validaUser(char *nome){
-	FILE *f;
-	int nUser =0,existe =0;
-	char nomeUser[99],ch;
-	f = fopen(NAMEBD,"rt");
-	if(f == NULL){
-		printf("[ERRO] Acesso ao ficheiro!\n");
-		exit(EXIT_FAILURE);
-	}
-
-	while((ch = fgetc(f))!= EOF){
-		if(ch == '\n') 
-			nUser++;
-	}
-	fseek(f,0,SEEK_SET);
-	for(int i = 0;i<nUser;i++){
-		fscanf(f,"%s",nomeUser);
-		if(strncmp(nome,nomeUser,8)==0) 
-			existe =1;
-	}
-	fclose(f);
-	return existe;
-}*/
-
 int adicionacliente(Login m[],int *n,Login c){
 	int i;
 	for(i = 0;i<*n && strcmp(c.nome,m[i].nome)!=0;i++);
