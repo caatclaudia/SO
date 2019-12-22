@@ -25,6 +25,7 @@ void settings(){
     printf("\n===========Configuracoes Iniciais======\n");
     printf("Numero de palavras proibidas: %d\n", nmaxnot);
     printf("Numero maximo de mensagens a armazenar: %d\n", nmaxmsg);
+    printf("Numero maximo de utilizadores: %d\n", maxusers);
     printf("Valor de Timeout: %d\n", TIMEOUT);
     printf("Nome de ficheiro de palavras proibidas: %s\n",fileWN);
     printf("=========================================\n\n");
@@ -50,7 +51,7 @@ void chamaVerificador(char *frase){
 	wait(&estado);
 }
 
-int validaUser(char *nome){
+/*int validaUser(char *nome){
 	FILE *f;
 	int nUser =0,existe =0;
 	char nomeUser[99],ch;
@@ -72,7 +73,7 @@ int validaUser(char *nome){
 	}
 	fclose(f);
 	return existe;
-}
+}*/
 
 int adicionacliente(Login m[],int *n,Login c){
 	int i;
@@ -83,6 +84,15 @@ int adicionacliente(Login m[],int *n,Login c){
 	        return 0;
 	}
 	return 1;
+}
+
+int existecliente(Login m[], int n, char nome[]){
+    int i;
+    for(i=0; i<n; i++){
+	if(strcmp(m[i].nome,nome)==0)
+        	return 1;
+    }
+    return 0;
 }
 
 void eliminacliente(Login m[],int *n,int pid){
@@ -96,7 +106,7 @@ void eliminacliente(Login m[],int *n,int pid){
 
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[500], fifo_name[20];
-    int num, fd_ser, fd_cli, res;
+    int num, fd_ser, fd_cli, res, adicionaNome=0;
     int FLAG_SHUTDOWN = 0, FLAG_FILTER=1;
     fd_set fontes;
     PEDIDO p;
@@ -153,37 +163,25 @@ int main(int argc, char *argv[]){
 		      if(r == sizeof(Login) && cli.acesso == 1){
 			sprintf(fifo_name, FIFO_CLI, cli.remetente);
 			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
-			cli.resposta = validaUser(cli.nome);
-			if(cli.resposta == 1 ){
-                		if(s.ncliativos + 1 <= maxusers){
-                	        	time_t timer;
-                	        	struct tm *dt;
-   					timer = time(NULL);
-                	        	dt = localtime(&timer);
-                	        	cli.inicioLogin.hora = dt->tm_hour;
-                	        	cli.inicioLogin.min = dt->tm_min;
-                	        	cli.inicioLogin.seg = dt->tm_sec;
-                	     	   	if(adicionacliente(clientes,&numcli,cli)==0 ){
-	                     	        	s.ncliativos++;
-        	             	       		for(int i=0;i<maxusers;i++){
-	                     	                	if(listaUsers[i] == -1){
-        	             	               			listaUsers[i] = cli.remetente;
-        	             	               			break;
-        	             	           		}
-        	             	       		}
-        	             	   	}
-        	             	   	else{
-        	             	        	cli.resposta = 0;
-        	             	   	}
-        	        	}
-                        	else{
-                        		cli.resposta =0;
-                        	}
-		  	  }
-		          printf("\n%s iniciou sessao!\n",cli.nome);
-			  res = write(fd_cli,&cli,sizeof(Login));
-			  close(fd_cli);
+			while(existecliente(clientes, s.ncliativos, cli.nome)){
+				adicionaNome++;
+				char adiciona[20];
+				adiciona[0]=adicionaNome+'0';
+				strcat(cli.nome, adiciona);
 			}
+                	if((s.ncliativos + 1 <= maxusers) && adicionacliente(clientes,&numcli,cli)==0){
+	               	        s.ncliativos++;
+                  	       	for(int i=0;i<maxusers;i++){
+                     	               	if(listaUsers[i] == -1){
+        	               			listaUsers[i] = cli.remetente;
+        	       	      			break;
+        	      	      		}
+                   	        }
+       	        	}
+		        printf("\n%s iniciou sessao!\n",cli.nome);
+			res = write(fd_cli,&cli,sizeof(Login));
+			close(fd_cli);
+		      }
 		}
 		else if(r == sizeof(Login) && cli.acesso ==0){
 		        for(int i=0;i<maxusers;i++)
@@ -278,9 +276,8 @@ int main(int argc, char *argv[]){
 		}
 		else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
 			comandosmenu();
-		else if(strcmp(comando,"mensagem")==0 && comandoAux!=NULL){
-			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
-			//Enviar mensagem ao verificador
+		else if(strcmp(comando,"mensagem")==0 && comandoAux!=NULL){//Enviar mensagem ao verificador
+			printf("Mensagem: %s\n", comandoAux[1]);
 			chamaVerificador(comandoAux[1]);
 		}
 		else{

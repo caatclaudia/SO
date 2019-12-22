@@ -117,8 +117,12 @@ int main(int argc, char *argv[]){
 	char nome[20];
         int fd_ser, op, res;
 	PEDIDO p;
-	Login cli, c;
+	Login cli;
 
+	if(argc!=2){
+		return 0;
+		printf("[ERRO] Falta o nome de utilizador!\n");
+	}
 	if(access(FIFO_SERV, F_OK)!=0) {
         	printf("[ERRO] Nao ha nenhum servidor!\n");
         	return EXIT_FAILURE;
@@ -127,34 +131,30 @@ int main(int argc, char *argv[]){
     	p.remetente = getpid();
 	
 	if(access(fifo_name, F_OK)==0) {
-       		fprintf(stderr, "[ERROR] Cli ja existe.\n");
+       		fprintf(stderr, "[ERRO] Cli ja existe.\n");
          	return EXIT_FAILURE;
 	 }
 	if(mkfifo(fifo_name, 0600) == -1){
-		perror("\nmkfifo do FIFO do cliente deu erro");
+		perror("\n[ERRO] mkfifo do FIFO do cliente deu erro");
 		exit(EXIT_FAILURE);
 	}
 	if(signal(SIGINT,trataSig) == SIG_ERR){
-	  perror("\nNão foi possivel configurar o sinal SIGINT\n");
+	  perror("\n[ERRO] Não foi possivel configurar o sinal SIGINT\n");
 	  exit(EXIT_FAILURE);
 	}
 
-	printf("Introduza o seu username: ");
-	scanf(" %s",nome);
-        cli.remetente = getpid();
+	cli.remetente = getpid();
         cli.acesso = 1;
 	cli.primeiro = 1;
-	strcpy(cli.nome,nome);
+	strcpy(cli.nome,argv[1]);
 
 	fd_ser = open(FIFO_SERV, O_WRONLY); // escrita
 
 	fd_cli = open(fifo_name, O_RDWR);
         res = write(fd_ser,&cli,sizeof(Login));
-	res = read(fd_cli,&c,sizeof(Login));
-  	if(c.resposta == 0){
-          printf("\nUtilizador nao tem permissao!\n");
-		exit(0);
-	}
+	res = read(fd_cli,&cli,sizeof(Login));
+  	
+        printf("\nUtilizador: %s\n", cli.nome);
 
 	cli.primeiro=0;
 
