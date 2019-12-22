@@ -54,9 +54,9 @@ int validaUser(char *nome){
 	FILE *f;
 	int nUser =0,existe =0;
 	char nomeUser[99],ch;
-	f = fopen(namebd,"rt");
+	f = fopen(NAMEBD,"rt");
 	if(f == NULL){
-		printf("Erro no acesso ao ficheiro!\n");
+		printf("[ERRO] Acesso ao ficheiro!\n");
 		exit(EXIT_FAILURE);
 	}
 
@@ -93,6 +93,7 @@ int existecliente(Login m[],int n, char nome[]){
 	else 
 		return 1;
 }
+
 void eliminacliente(Login m[],int *n,int pid){
 	int i;
 	for(i = 0;i<*n && m[i].remetente!=pid;i++);
@@ -109,12 +110,12 @@ int main(int argc, char *argv[]){
     fd_set fontes;
     PEDIDO p;
     struct timeval t;
-    Login cli, clientes[10];
+    Login cli, clientes[maxusers];
     Servidor s;
-    int numcli=0, r, nlinhas=1000;
+    int numcli=0, r;
 
-    int listaUsers[10];
-        for(int i = 0;i<10;i++)
+    int listaUsers[maxusers];
+        for(int i = 0;i<maxusers;i++)
 	    listaUsers[i] = -1;
 
 	if(access(FIFO_SERV, F_OK)==0) { //verificar se o sv esta aberto
@@ -133,6 +134,9 @@ int main(int argc, char *argv[]){
         nmaxmsg = atoi(getenv("MAXMSG"));
 	if(getenv("WORDSNOT") != NULL){
 		strcpy(fileWN, getenv("WORDSNOT"));
+	}
+	if(getenv("MAXUSERS") != NULL){
+		maxusers = atoi(getenv("MAXUSERS"));
 	}
         
 
@@ -154,12 +158,13 @@ int main(int argc, char *argv[]){
 	
 	if(res>0 && FD_ISSET(fd_ser, &fontes)) {		//FIFO
 		r = read(fd_ser,&cli,sizeof(Login));
-		if(r == sizeof(Login) && cli.acesso == 1){
+		if(cli.primeiro){
+		      if(r == sizeof(Login) && cli.acesso == 1){
 			sprintf(fifo_name, FIFO_CLI, cli.remetente);
 			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
 			cli.resposta = validaUser(cli.nome);
 			if(cli.resposta == 1 ){
-                		if(s.ncliativos + 1 <= 10){
+                		if(s.ncliativos + 1 <= maxusers){
                 	        	time_t timer;
                 	        	struct tm *dt;
    					timer = time(NULL);
@@ -167,10 +172,9 @@ int main(int argc, char *argv[]){
                 	        	cli.inicioLogin.hora = dt->tm_hour;
                 	        	cli.inicioLogin.min = dt->tm_min;
                 	        	cli.inicioLogin.seg = dt->tm_sec;
-                	        	cli.nlinhas = nlinhas;
                 	     	   	if(adicionacliente(clientes,&numcli,cli)==0 ){
 	                     	        	s.ncliativos++;
-        	             	       		for(int i=0;i<10;i++){
+        	             	       		for(int i=0;i<maxusers;i++){
 	                     	                	if(listaUsers[i] == -1){
         	             	               			listaUsers[i] = cli.remetente;
         	             	               			break;
@@ -187,15 +191,29 @@ int main(int argc, char *argv[]){
 		  	  }
 		          printf("\n%s iniciou sessao!\n",cli.nome);
 			  res = write(fd_cli,&cli,sizeof(Login));
-
-    			/*  read(fd_ser, &p, sizeof(PEDIDO));
-			  printf("Interrompido...\nRecebi '%s'\n\n", p.frase);
-			  if(FLAG_FILTER==1)			
-			  	chamaVerificador(p.frase);
-			
-			  write(fd_cli, &p, sizeof(PEDIDO));*/
 			  close(fd_cli);
-		}	
+			}
+		}
+		else if(r == sizeof(Login) && cli.acesso ==0){
+		        for(int i=0;i<maxusers;i++)
+            		    if(listaUsers[i] == cli.remetente){
+			        listaUsers[i] = -1;
+            		    	s.ncliativos--;
+            	                eliminacliente(clientes,&numcli,cli.remetente);
+            			printf("\n[Cliente %d a terminar]\n",cli.remetente);
+            		}
+        	}
+		else{
+			sprintf(fifo_name, FIFO_CLI, cli.remetente);
+			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
+			read(fd_ser, &p, sizeof(PEDIDO));
+			printf("\nInterrompido...\nRecebi '%s'\n\n", p.frase);
+			if(FLAG_FILTER==1)			
+				chamaVerificador(p.frase);
+			
+			write(fd_cli, &p, sizeof(PEDIDO));
+			close(fd_cli);
+		}
     	}
     	else if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
 		fgets(comando,60,stdin);
@@ -274,11 +292,11 @@ int main(int argc, char *argv[]){
 	}
     }while (FLAG_SHUTDOWN != 1);
 
-    remove(FIFO_SERV); //funciona!
+    remove(FIFO_SERV);
     close(fd_ser);
     unlink(FIFO_SERV);
 
-    for(int i=0;i<10;i++){
+    for(int i=0;i<maxusers;i++){
 	if(listaUsers[i] != -1){
 	   kill(listaUsers[i],SIGINT);
 	}

@@ -139,31 +139,24 @@ int main(int argc, char *argv[]){
 	  exit(EXIT_FAILURE);
 	}
 
-	//if(strcmp(nome," ")==0){
-	   printf("Introduza o seu username: ");
-	   scanf(" %s",nome);
-	//}
-//sprintf(str,"cli%dpipe",getpid());
-  //   	mkfifo(str,0600);
-        cli.remetente = getpid();
-        cli.acesso = 1;
+	printf("Introduza o seu username: ");
+	scanf(" %s",nome);
+    cli.remetente = getpid();
+    cli.acesso = 1;
+	cli.primeiro = 1;
 	strcpy(cli.nome,nome);
 
 	fd_ser = open(FIFO_SERV, O_WRONLY); // escrita
 
 	fd_cli = open(fifo_name, O_RDWR);
-	//fd = open(namepipe,O_WRONLY);
-        res = write(fd_ser,&cli,sizeof(Login));
-        //fd2 = open(str,O_RDONLY);
-       // fd2l= open(str,O_WRONLY);
+    res = write(fd_ser,&cli,sizeof(Login));
 	res = read(fd_cli,&c,sizeof(Login));
-//	printf("%d",c.resposta);
   	if(c.resposta == 0){
           printf("\nUtilizador nao tem permissao!\n");
 		exit(0);
 	}
 
-	
+	cli.primeiro=0;
 
 	do{
 		do{		
@@ -196,6 +189,7 @@ int main(int argc, char *argv[]){
 				p.frase[strlen(p.frase)-1]='\0';
 			fflush(stdin);
 			strcpy(nova.corpo,p.frase);
+			write(fd_ser,&cli,sizeof(Login));
 			write(fd_ser, &p, sizeof(PEDIDO));
 	
 			read(fd_cli, &p, sizeof(PEDIDO));
@@ -217,6 +211,9 @@ int main(int argc, char *argv[]){
 		}
 		fflush(stdout);
 	}while(op!=6);
+
+	cli.acesso=0;
+	write(fd_ser,&cli,sizeof(Login));
 
 	close(fd_cli);
 	close(fd_ser);
