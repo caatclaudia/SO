@@ -261,15 +261,25 @@ int main(int argc, char *argv[]){
 			//Mensagem em questao
 			//APAGAR ESTA MENSAGEM
 		}
-		else if(strcmp(comando,"kick")==0 && comandoAux!=NULL){
+		else if(strcmp(comando,"kick")==0 && comandoAux!=NULL){ //EXCLUIR USER
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			//User em questao
-			//EXCLUIR USER
+			for(int i=0; i<maxusers; i++){
+				if(strcmp(clientes[i].nome,comandoAux[1])==0){
+					for(int i=0;i<maxusers;i++)
+            		    			if(listaUsers[i] == clientes[i].remetente){
+			        			listaUsers[i] = -1;
+            		    				s.ncliativos--;
+            	                			eliminacliente(clientes,&numcli,clientes[i].remetente);
+            						printf("\n[Cliente %d a terminar]\n",clientes[i].remetente);
+							kill(clientes[i].remetente,SIGINT);
+            					}
+				}
+			}
 		}
 		else if(strcmp(comando,"shutdown")==0 && comandoAux[1]==NULL){
 			FLAG_SHUTDOWN = 1;
 			printf("\n\n ===========Servidor vai desligar==========\n\n");
-			//AVISAR CLIENTES
 		}
 		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL){
 			printf("Introduziu comando %s\n", comando);

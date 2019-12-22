@@ -141,15 +141,15 @@ int main(int argc, char *argv[]){
 
 	printf("Introduza o seu username: ");
 	scanf(" %s",nome);
-    cli.remetente = getpid();
-    cli.acesso = 1;
+        cli.remetente = getpid();
+        cli.acesso = 1;
 	cli.primeiro = 1;
 	strcpy(cli.nome,nome);
 
 	fd_ser = open(FIFO_SERV, O_WRONLY); // escrita
 
 	fd_cli = open(fifo_name, O_RDWR);
-    res = write(fd_ser,&cli,sizeof(Login));
+        res = write(fd_ser,&cli,sizeof(Login));
 	res = read(fd_cli,&c,sizeof(Login));
   	if(c.resposta == 0){
           printf("\nUtilizador nao tem permissao!\n");
