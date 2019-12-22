@@ -85,15 +85,6 @@ int adicionacliente(Login m[],int *n,Login c){
 	return 1;
 }
 
-int existecliente(Login m[],int n, char nome[]){
-	int i;
-	for(i=0;i<n && strcmp(m[i].nome,nome)!=0;i++);
-	if(i== n)
-		return 0;
-	else 
-		return 1;
-}
-
 void eliminacliente(Login m[],int *n,int pid){
 	int i;
 	for(i = 0;i<*n && m[i].remetente!=pid;i++);
@@ -239,9 +230,11 @@ int main(int argc, char *argv[]){
 			else if(strcmp(comandoAux[1],"off")==0)
 				FLAG_FILTER=0;
 		}
-		else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL){
-			printf("Introduziu comando %s\n", comando);
-			//LISTAR USERS
+		else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL){ //LISTAR USERS
+			printf("\nUtilizadores ligados:\n");
+			for(int i=0; i<s.ncliativos; i++)
+				printf("   %s\n", clientes[i].nome);
+			
 		}
 		else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL){
 			printf("Introduziu comando %s\n", comando);
@@ -262,11 +255,9 @@ int main(int argc, char *argv[]){
 			//APAGAR ESTA MENSAGEM
 		}
 		else if(strcmp(comando,"kick")==0 && comandoAux!=NULL){ //EXCLUIR USER
-			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
-			//User em questao
-			for(int i=0; i<maxusers; i++){
+			for(int i=0; i<s.ncliativos; i++){
 				if(strcmp(clientes[i].nome,comandoAux[1])==0){
-					for(int i=0;i<maxusers;i++)
+					for(int i=0;i<s.ncliativos;i++)
             		    			if(listaUsers[i] == clientes[i].remetente){
 			        			listaUsers[i] = -1;
             		    				s.ncliativos--;
