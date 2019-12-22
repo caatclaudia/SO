@@ -1,7 +1,9 @@
 #include <fcntl.h>
+#include <time.h>
 int nmaxnot = 5;
 int nmaxmsg = 15;
 char fileWN[20]="palavras.txt";
+char namebd[20] =  "medit.db";	//ACRESCENTEI
 #define MAXMSG nmaxmsg
 #define WORDSNOT fileWN
 #define MAXNOT nmaxnot
@@ -13,6 +15,25 @@ char fileWN[20]="palavras.txt";
 
 #define FIFO_SERV "SERV"
 #define FIFO_CLI "CLI%d"
+
+typedef struct{		//ACRESCENTEI
+   int ativo;
+   int ncliativos;
+}Servidor;
+
+typedef struct{		//ACRESCENTEI
+   int hora,min,seg;
+}Data;
+
+typedef struct{		//ACRESCENTEI
+  int remetente;
+  char nome[20];
+  int  resposta;
+  char npinter[20];
+  int acesso;//1 login 0 logout
+  Data inicioLogin;
+  int nlinhas;
+}Login;
 
 typedef struct utilizador{
     char username[TAM];

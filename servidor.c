@@ -50,6 +50,58 @@ void chamaVerificador(char *frase){
 	wait(&estado);
 }
 
+int validaUser(char *nome){
+	FILE *f;
+	int nUser =0,existe =0;
+	char nomeUser[99],ch;
+	f = fopen(namebd,"rt");
+	if(f == NULL){
+		printf("Erro no acesso ao ficheiro!\n");
+		exit(EXIT_FAILURE);
+	}
+
+	while((ch = fgetc(f))!= EOF){
+		if(ch == '\n') 
+			nUser++;
+	}
+	fseek(f,0,SEEK_SET);
+	for(int i = 0;i<nUser;i++){
+		fscanf(f,"%s",nomeUser);
+		if(strncmp(nome,nomeUser,8)==0) 
+			existe =1;
+	}
+	fclose(f);
+	return existe;
+}
+
+int adicionacliente(Login m[],int *n,Login c){
+	int i;
+	for(i = 0;i<*n && strcmp(c.nome,m[i].nome)!=0;i++);
+	if(i == *n){   
+	        m[*n] = c;
+	        (*n)++;
+	        return 0;
+	}
+	return 1;
+}
+
+int existecliente(Login m[],int n, char nome[]){
+	int i;
+	for(i=0;i<n && strcmp(m[i].nome,nome)!=0;i++);
+	if(i== n)
+		return 0;
+	else 
+		return 1;
+}
+void eliminacliente(Login m[],int *n,int pid){
+	int i;
+	for(i = 0;i<*n && m[i].remetente!=pid;i++);
+	if(i!= *n){   
+ 	       m[i] = m[*n-1];
+ 	       (*n)--;
+	}
+}
+
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[500], fifo_name[20];
     int num, fd_ser, fd_cli, res;
@@ -57,6 +109,13 @@ int main(int argc, char *argv[]){
     fd_set fontes;
     PEDIDO p;
     struct timeval t;
+    Login cli, clientes[10];
+    Servidor s;
+    int numcli=0, r, nlinhas=1000;
+
+    int listaUsers[10];
+        for(int i = 0;i<10;i++)
+	    listaUsers[i] = -1;
 
 	if(access(FIFO_SERV, F_OK)==0) { //verificar se o sv esta aberto
        		fprintf(stderr, "[ERROR] Server ja existe.\n");
@@ -94,18 +153,50 @@ int main(int argc, char *argv[]){
 
 	
 	if(res>0 && FD_ISSET(fd_ser, &fontes)) {		//FIFO
-			read(fd_ser, &p, sizeof(PEDIDO));
-			printf("Interrompido...\nRecebi '%s'\n\n", p.frase);
-			if(FLAG_FILTER==1)			
-			chamaVerificador(p.frase);
+		r = read(fd_ser,&cli,sizeof(Login));
+		if(r == sizeof(Login) && cli.acesso == 1){
+			sprintf(fifo_name, FIFO_CLI, cli.remetente);
+			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
+			cli.resposta = validaUser(cli.nome);
+			if(cli.resposta == 1 ){
+                		if(s.ncliativos + 1 <= 10){
+                	        	time_t timer;
+                	        	struct tm *dt;
+   					timer = time(NULL);
+                	        	dt = localtime(&timer);
+                	        	cli.inicioLogin.hora = dt->tm_hour;
+                	        	cli.inicioLogin.min = dt->tm_min;
+                	        	cli.inicioLogin.seg = dt->tm_sec;
+                	        	cli.nlinhas = nlinhas;
+                	     	   	if(adicionacliente(clientes,&numcli,cli)==0 ){
+	                     	        	s.ncliativos++;
+        	             	       		for(int i=0;i<10;i++){
+	                     	                	if(listaUsers[i] == -1){
+        	             	               			listaUsers[i] = cli.remetente;
+        	             	               			break;
+        	             	           		}
+        	             	       		}
+        	             	   	}
+        	             	   	else{
+        	             	        	cli.resposta = 0;
+        	             	   	}
+        	        	}
+                        	else{
+                        		cli.resposta =0;
+                        	}
+		  	  }
+		          printf("\n%s iniciou sessao!\n",cli.nome);
+			  res = write(fd_cli,&cli,sizeof(Login));
 
-			sprintf(fifo_name, FIFO_CLI, p.remetente);
-			fd_cli = open(fifo_name, O_WRONLY);
-			write(fd_cli, &p, sizeof(PEDIDO));
-			close(fd_cli);
-		
+    			/*  read(fd_ser, &p, sizeof(PEDIDO));
+			  printf("Interrompido...\nRecebi '%s'\n\n", p.frase);
+			  if(FLAG_FILTER==1)			
+			  	chamaVerificador(p.frase);
+			
+			  write(fd_cli, &p, sizeof(PEDIDO));*/
+			  close(fd_cli);
+		}	
     	}
-
     	else if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
 		fgets(comando,60,stdin);
 		comando[strlen(comando) - 1] = '\0';
@@ -186,6 +277,12 @@ int main(int argc, char *argv[]){
     remove(FIFO_SERV); //funciona!
     close(fd_ser);
     unlink(FIFO_SERV);
+
+    for(int i=0;i<10;i++){
+	if(listaUsers[i] != -1){
+	   kill(listaUsers[i],SIGINT);
+	}
+    }
     
     return EXIT_SUCCESS;
 }

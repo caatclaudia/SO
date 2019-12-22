@@ -95,11 +95,29 @@ void subscreverOuCancelar(){
 	return ;
 }
 
+int fd_cli;
+char fifo_name[20];
+
+void trataSig(int i){
+    int fd,res;
+    Login c;
+	printf("\n[CLIENTE VAI DESLIGAR]\n");
+    c.remetente = getpid();
+    c.acesso = 0;
+    fd = open(FIFO_SERV,O_WRONLY);
+    res = write(fd,&c,sizeof(Login));
+    close(fd);
+    close(fd_cli);
+    unlink(fifo_name);
+    exit(EXIT_FAILURE);
+}
+
 int main(int argc, char *argv[]){
 	
-	char fifo_name[20];
-        int fd_ser, fd_cli, op;
+	char nome[20];
+        int fd_ser, op, res;
 	PEDIDO p;
+	Login cli, c;
 
 	if(access(FIFO_SERV, F_OK)!=0) {
         	printf("[ERRO] Nao ha nenhum servidor!\n");
@@ -116,10 +134,36 @@ int main(int argc, char *argv[]){
 		perror("\nmkfifo do FIFO do cliente deu erro");
 		exit(EXIT_FAILURE);
 	}
+	if(signal(SIGINT,trataSig) == SIG_ERR){
+	  perror("\nNão foi possivel configurar o sinal SIGINT\n");
+	  exit(EXIT_FAILURE);
+	}
+
+	//if(strcmp(nome," ")==0){
+	   printf("Introduza o seu username: ");
+	   scanf(" %s",nome);
+	//}
+//sprintf(str,"cli%dpipe",getpid());
+  //   	mkfifo(str,0600);
+        cli.remetente = getpid();
+        cli.acesso = 1;
+	strcpy(cli.nome,nome);
 
 	fd_ser = open(FIFO_SERV, O_WRONLY); // escrita
-	
+
 	fd_cli = open(fifo_name, O_RDWR);
+	//fd = open(namepipe,O_WRONLY);
+        res = write(fd_ser,&cli,sizeof(Login));
+        //fd2 = open(str,O_RDONLY);
+       // fd2l= open(str,O_WRONLY);
+	res = read(fd_cli,&c,sizeof(Login));
+//	printf("%d",c.resposta);
+  	if(c.resposta == 0){
+          printf("\nUtilizador nao tem permissao!\n");
+		exit(0);
+	}
+
+	
 
 	do{
 		do{		
