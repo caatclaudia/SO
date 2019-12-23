@@ -111,6 +111,17 @@ void mensagensTopico(Msg mensagens[], int n, char topico[]){
 	printf("Nao ha mensagens deste topico!\n");
 }
 
+void listaMensagens(Msg mensagens[], int n){
+    int i;
+    for(i=0; i<n; i++){
+	    printf("   Topico: %s\n", mensagens[i].topico);
+	    printf("   Titulo: %s\n", mensagens[i].titulo);
+	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
+    }
+    if(i==0)
+	printf("Nao ha mensagens!\n");
+}
+
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[500], fifo_name[20];
     int num, fd_ser, fd_cli, res, adicionaNome=0;
@@ -243,7 +254,7 @@ int main(int argc, char *argv[]){
 			else if(strcmp(comandoAux[1],"off")==0)
 				FLAG_FILTER=0;
 		}
-		else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL){ //LISTAR USERS
+		else if(strcmp(comando,"users")==0 && comandoAux[1]==NULL){//LISTAR USERS
 			printf("\nUtilizadores ligados:\n");
 			for(int i=0; i<s.ncliativos; i++)
 				printf("   %s\n", clientes[i].nome);
@@ -253,9 +264,9 @@ int main(int argc, char *argv[]){
 			printf("Introduziu comando %s\n", comando);
 			//LISTAR TOPICOS
 		}
-		else if(strcmp(comando,"msg")==0 && comandoAux[1]==NULL){
-			printf("Introduziu comando %s\n", comando);
-			//LISTAR MENSAGENS
+		else if(strcmp(comando,"msg")==0 && comandoAux[1]==NULL){//LISTAR MENSAGENS
+			printf("Lista de mensagens:\n");			
+			listaMensagens(mensagens, s.nmensagens);
 		}
 		else if(strcmp(comando,"topic")==0 && comandoAux[1]!=NULL){//LISTAR MENSAGENS DESTE TOPICO
 			printf("Topico: %s\n", comandoAux[1]);
