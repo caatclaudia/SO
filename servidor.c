@@ -222,7 +222,7 @@ int main(int argc, char *argv[]){
 				//VERIFICA AS PALAVRAS MAS
 				if(FLAG_FILTER==1)			
 					chamaVerificador(msg.corpo);
-				
+				msg.resposta=1;
 	               	        s.nmensagens++;
 				adicionaMensagem(mensagens, s.nmensagens, msg);
        	        	}

@@ -163,9 +163,10 @@ int main(int argc, char *argv[]){
 			clean_input();
 		}while(op<1 || op>6);
 
-		if(op==1){
+		if(op==1){//ESCREVER MENSAGEM
 			Msg nova;
 		    	nova.remetente = getpid();
+			nova.resposta=0;
 			printf("\nTopico>> ");
 			fgets(nova.topico,TAM,stdin);
 			if(nova.topico[strlen(nova.topico)-1]=='\n')
@@ -192,8 +193,9 @@ int main(int argc, char *argv[]){
 	
 			read(fd_cli, &nova, sizeof(Msg));
 			fflush(stdout);	
-		
-			//ESCREVER MENSAGEM
+			
+			if(!nova.resposta)
+				printf("\nMensagem nao foi guardada!\n");
 		}
 		else if(op==2){
 			consultarTopicos(); //CONSULTAR TOPICOS

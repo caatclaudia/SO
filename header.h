@@ -45,6 +45,7 @@ typedef struct mensagem{
     char topico[TAM];
     char titulo[TAM];
     int duracao;
+    int resposta;
     int remetente;
 }Msg;
 
