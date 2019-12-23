@@ -116,7 +116,6 @@ int main(int argc, char *argv[]){
 	
 	char nome[20];
         int fd_ser, op, res;
-	PEDIDO p;
 	Login cli;
 
 	if(argc!=2){
@@ -128,7 +127,6 @@ int main(int argc, char *argv[]){
         	return EXIT_FAILURE;
 	}
 	sprintf(fifo_name, FIFO_CLI, getpid());
-    	p.remetente = getpid();
 	
 	if(access(fifo_name, F_OK)==0) {
        		fprintf(stderr, "[ERRO] Cli ja existe.\n");
@@ -166,7 +164,8 @@ int main(int argc, char *argv[]){
 		}while(op<1 || op>6);
 
 		if(op==1){
-			msg nova;
+			Msg nova;
+		    	nova.remetente = getpid();
 			printf("\nTopico>> ");
 			fgets(nova.topico,TAM,stdin);
 			if(nova.topico[strlen(nova.topico)-1]=='\n')
@@ -184,15 +183,14 @@ int main(int argc, char *argv[]){
 			clean_input();
 		
 			printf("\nCorpo>> ");
-			fgets(p.frase,MAXCHAR,stdin);
-			if(p.frase[strlen(p.frase)-1]=='\n')
-				p.frase[strlen(p.frase)-1]='\0';
+			fgets(nova.corpo,MAXCHAR,stdin);
+			if(nova.corpo[strlen(nova.corpo)-1]=='\n')
+				nova.corpo[strlen(nova.corpo)-1]='\0';
 			fflush(stdin);
-			strcpy(nova.corpo,p.frase);
 			write(fd_ser,&cli,sizeof(Login));
-			write(fd_ser, &p, sizeof(PEDIDO));
+			write(fd_ser, &nova, sizeof(Msg));
 	
-			read(fd_cli, &p, sizeof(PEDIDO));
+			read(fd_cli, &nova, sizeof(Msg));
 			fflush(stdout);	
 		
 			//ESCREVER MENSAGEM

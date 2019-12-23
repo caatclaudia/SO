@@ -80,30 +80,63 @@ void eliminacliente(Login m[],int *n,int pid){
 	}
 }
 
+void iniciaMensagens(Msg mensagens[]){
+    for(int i=0; i<nmaxmsg; i++){
+	mensagens[i].remetente=-1;
+	strcpy(mensagens[i].corpo," ");
+	strcpy(mensagens[i].topico," ");
+	strcpy(mensagens[i].titulo," ");
+	mensagens[i].duracao=-1;
+    }
+}
+
+void adicionaMensagem(Msg mensagens[], int n, Msg msg){
+	strcpy(mensagens[n-1].corpo,msg.corpo);
+	strcpy(mensagens[n-1].topico,msg.topico);
+	strcpy(mensagens[n-1].titulo,msg.titulo);
+	mensagens[n-1].duracao=msg.duracao;
+	mensagens[n-1].remetente=msg.remetente;
+}
+
+void mensagensTopico(Msg mensagens[], int n, char topico[]){
+    int EXISTE=0;
+    for(int i=0; i<n; i++){
+	if(strcmp(mensagens[i].topico,topico)==0){
+	    printf("   Titulo: %s\n", mensagens[i].titulo);
+	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
+	    EXISTE=1;
+	}
+    }
+    if(!EXISTE)
+	printf("Nao ha mensagens deste topico!\n");
+}
+
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[500], fifo_name[20];
     int num, fd_ser, fd_cli, res, adicionaNome=0;
     int FLAG_SHUTDOWN = 0, FLAG_FILTER=1;
     fd_set fontes;
-    PEDIDO p;
+    Msg msg, mensagens[nmaxmsg];
     struct timeval t;
     Login cli, clientes[maxusers];
     Servidor s;
     int numcli=0, r;
 
     int listaUsers[maxusers];
-        for(int i = 0;i<maxusers;i++)
-	    listaUsers[i] = -1;
+    for(int i = 0;i<maxusers;i++)
+	listaUsers[i] = -1;
+    iniciaMensagens(mensagens);
+    s.nmensagens=0;
 
-	if(access(FIFO_SERV, F_OK)==0) { //verificar se o sv esta aberto
-       		fprintf(stderr, "[ERROR] Server ja existe.\n");
-         	return EXIT_FAILURE;
-	 }
-	if(mkfifo(FIFO_SERV, 0600) == -1){
-		perror("\nmkfifo do FIFO do servidor deu erro");
-		exit(EXIT_FAILURE);
-	}
-	fd_ser = open(FIFO_SERV, O_RDWR);
+    if(access(FIFO_SERV, F_OK)==0) { //verificar se o sv esta aberto
+    	fprintf(stderr, "[ERROR] Server ja existe.\n");
+      	return EXIT_FAILURE;
+    }
+    if(mkfifo(FIFO_SERV, 0600) == -1){
+	perror("\nmkfifo do FIFO do servidor deu erro");
+	exit(EXIT_FAILURE);
+    }
+    fd_ser = open(FIFO_SERV, O_RDWR);
 
     if(getenv("MAXNOT") != NULL)
         nmaxnot = atoi(getenv("MAXNOT"));
@@ -171,12 +204,18 @@ int main(int argc, char *argv[]){
 		else{
 			sprintf(fifo_name, FIFO_CLI, cli.remetente);
 			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
-			read(fd_ser, &p, sizeof(PEDIDO));
-			printf("\nInterrompido...\nRecebi '%s'\n\n", p.frase);
-			if(FLAG_FILTER==1)			
-				chamaVerificador(p.frase);
-			
-			write(fd_cli, &p, sizeof(PEDIDO));
+			read(fd_ser, &msg, sizeof(Msg));
+			printf("\nInterrompido...\nRecebi '%s'\n\n", msg.corpo);
+
+			if(s.nmensagens < nmaxmsg){
+				//VERIFICA AS PALAVRAS MAS
+				if(FLAG_FILTER==1)			
+					chamaVerificador(msg.corpo);
+				
+	               	        s.nmensagens++;
+				adicionaMensagem(mensagens, s.nmensagens, msg);
+       	        	}
+			write(fd_cli, &msg, sizeof(Msg));
 			close(fd_cli);
 		}
     	}
@@ -218,10 +257,9 @@ int main(int argc, char *argv[]){
 			printf("Introduziu comando %s\n", comando);
 			//LISTAR MENSAGENS
 		}
-		else if(strcmp(comando,"topic")==0 && comandoAux[1]!=NULL){
-			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
-			//Topico em questao
-			//LISTAR MENSAGENS DESTE TOPICO
+		else if(strcmp(comando,"topic")==0 && comandoAux[1]!=NULL){//LISTAR MENSAGENS DESTE TOPICO
+			printf("Topico: %s\n", comandoAux[1]);
+			mensagensTopico(mensagens, s.nmensagens, comandoAux[1]);
 		}
 		else if(strcmp(comando,"del")==0 && comandoAux!=NULL){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);

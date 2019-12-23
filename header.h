@@ -2,11 +2,13 @@
 #include <time.h>
 int nmaxnot = 5;
 int nmaxmsg = 15;
+int maxusers = 10;
 char fileWN[20]="palavras.txt";
-char namebd[20] =  "medit.db";	//ACRESCENTEI
 #define MAXMSG nmaxmsg
 #define WORDSNOT fileWN
 #define MAXNOT nmaxnot
+#define MAXUSERS maxusers
+#define NAMEBD "medit.db"
 #define MAXCHAR 1000
 #define TIMEOUT 10
 #define TAM 50
@@ -18,46 +20,36 @@ char namebd[20] =  "medit.db";	//ACRESCENTEI
 
 typedef struct{		//ACRESCENTEI
    int ativo;
+   int nmensagens;
    int ncliativos;
 }Servidor;
 
 typedef struct{		//ACRESCENTEI
-   int hora,min,seg;
-}Data;
-
-typedef struct{		//ACRESCENTEI
   int remetente;
   char nome[20];
-  int  resposta;
-  char npinter[20];
+  int primeiro;//1 inicio ou 0
   int acesso;//1 login 0 logout
-  Data inicioLogin;
-  int nlinhas;
 }Login;
 
 typedef struct utilizador{
     char username[TAM];
     int IDuser;
-}user;
+}User;
 
 typedef struct servidor{
     int nclientes;
-}server;
+}Server;
 
 typedef struct mensagem{
     char corpo[MAXCHAR];
     char topico[TAM];
     char titulo[TAM];
     int duracao;
-}msg;
+    int remetente;
+}Msg;
 
 typedef struct editar{
-    msg *texto;
+    Msg *texto;
     int linha; //y
     int coluna; //x
-}edit;
-
-typedef struct pedido{
-	char frase[MAXCHAR];
-	int remetente;
-}PEDIDO;
+}Edit;
