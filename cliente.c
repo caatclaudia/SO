@@ -194,8 +194,10 @@ int main(int argc, char *argv[]){
 			read(fd_cli, &nova, sizeof(Msg));
 			fflush(stdout);	
 			
-			if(!nova.resposta)
+			if(nova.resposta==0)
 				printf("\nMensagem nao foi guardada!\n");
+			else
+				printf("\nMensagem %d guardada!\n", nova.resposta);
 		}
 		else if(op==2){
 			consultarTopicos(); //CONSULTAR TOPICOS

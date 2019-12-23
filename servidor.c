@@ -102,7 +102,7 @@ void mensagensTopico(Msg mensagens[], int n, char topico[]){
     int EXISTE=0;
     for(int i=0; i<n; i++){
 	if(strcmp(mensagens[i].topico,topico)==0){
-	    printf("   Titulo: %s\n", mensagens[i].titulo);
+	    printf("   Mensagem %d - Titulo: %s\n", i+1, mensagens[i].titulo);
 	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
 	    EXISTE=1;
 	}
@@ -114,12 +114,33 @@ void mensagensTopico(Msg mensagens[], int n, char topico[]){
 void listaMensagens(Msg mensagens[], int n){
     int i;
     for(i=0; i<n; i++){
-	    printf("   Topico: %s\n", mensagens[i].topico);
+	    printf("   Mensagem %d - Topico: %s\n", i+1, mensagens[i].topico);
 	    printf("   Titulo: %s\n", mensagens[i].titulo);
 	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
     }
     if(i==0)
 	printf("Nao ha mensagens!\n");
+}
+
+int apagarMensagem(Msg mensagens[], int n, int ind){
+    if(ind>n || ind<0){
+	printf("Esta mensagem nao existe!\n");
+	return 0;
+    }
+    
+    for(int i=ind-1; i<n-1; i++){
+	    strcpy(mensagens[i].corpo,mensagens[i+1].corpo);
+	    strcpy(mensagens[i].topico,mensagens[i+1].topico);
+	    strcpy(mensagens[i].titulo,mensagens[i+1].titulo);
+	    mensagens[i].duracao=mensagens[i+1].duracao;
+	    mensagens[i].remetente=mensagens[i+1].remetente;
+    }
+    mensagens[n-1].remetente=-1;
+    strcpy(mensagens[n-1].corpo," ");
+    strcpy(mensagens[n-1].topico," ");
+    strcpy(mensagens[n-1].titulo," ");
+    mensagens[n-1].duracao=-1;
+    return 1;
 }
 
 int main(int argc, char *argv[]){   
@@ -222,8 +243,8 @@ int main(int argc, char *argv[]){
 				//VERIFICA AS PALAVRAS MAS
 				if(FLAG_FILTER==1)			
 					chamaVerificador(msg.corpo);
-				msg.resposta=1;
 	               	        s.nmensagens++;
+				msg.resposta=s.nmensagens;
 				adicionaMensagem(mensagens, s.nmensagens, msg);
        	        	}
 			write(fd_cli, &msg, sizeof(Msg));
@@ -272,10 +293,12 @@ int main(int argc, char *argv[]){
 			printf("Topico: %s\n", comandoAux[1]);
 			mensagensTopico(mensagens, s.nmensagens, comandoAux[1]);
 		}
-		else if(strcmp(comando,"del")==0 && comandoAux!=NULL){
+		else if(strcmp(comando,"del")==0 && comandoAux!=NULL){//APAGAR MENSAGEM
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
-			//Mensagem em questao
-			//APAGAR ESTA MENSAGEM
+			int v=atoi(comandoAux[1]);
+			if(apagarMensagem(mensagens, s.nmensagens, v))
+				s.nmensagens--;
+			
 		}
 		else if(strcmp(comando,"kick")==0 && comandoAux!=NULL){ //EXCLUIR USER
 			for(int i=0; i<s.ncliativos; i++){
