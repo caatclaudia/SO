@@ -167,6 +167,25 @@ void listaTopicos(Msg mensagens[], int totalMensagens){
     }
 }
 
+void apagarTopicosSemMensagens(Msg mensagens[], int totalMensagens){
+	for(int i=0; i<totalMensagens; i++){
+		if(strcmp(mensagens[i].corpo," ")==0){
+			for(int j=i; j<totalMensagens; j++){
+				strcpy(mensagens[j].corpo,mensagens[j+1].corpo);
+	  		  	strcpy(mensagens[j].topico,mensagens[j+1].topico);
+	    			strcpy(mensagens[j].titulo,mensagens[j+1].titulo);
+	    			mensagens[j].duracao=mensagens[j+1].duracao;
+	    			mensagens[j].remetente=mensagens[j+1].remetente;
+			}
+			strcpy(mensagens[totalMensagens-1].corpo," ");
+  		  	strcpy(mensagens[totalMensagens-1].topico," ");
+    			strcpy(mensagens[totalMensagens-1].titulo," ");
+    			mensagens[totalMensagens-1].duracao=-1;
+    			mensagens[totalMensagens-1].remetente=-1;
+		}	
+	}
+}
+
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[500], fifo_name[20];
     int num, fd_ser, fd_cli, res, adicionaNome=0;
@@ -175,7 +194,7 @@ int main(int argc, char *argv[]){
     Msg msg, mensagens[nmaxmsg];
     struct timeval t;
     Login cli, clientes[maxusers];
-    Servidor s;
+    Server s;
     int numcli=0, r;
 
     int listaUsers[maxusers];
@@ -341,9 +360,11 @@ int main(int argc, char *argv[]){
 			FLAG_SHUTDOWN = 1;
 			printf("\n\n ===========Servidor vai desligar==========\n\n");
 		}
-		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL){
-			printf("Introduziu comando %s\n", comando);
-			//APAGAR TOPICOS SEM MENSAGENS
+		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL){//APAGAR TOPICOS SEM MENSAGENS
+			printf("\nApagando topicos sem mensagens!\n");
+			apagarTopicosSemMensagens(mensagens, s.nmensagens);
+			
+			//AVISAR CLIENTES
 		}
 		else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
 			comandosmenu();
