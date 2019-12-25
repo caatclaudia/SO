@@ -33,11 +33,7 @@ void iniciaMensagens(Msg mensagens[]){
 }
 
 void adicionaMensagem(Msg mensagens[], int n, Msg msg){
-	strcpy(mensagens[n-1].corpo,msg.corpo);
-	strcpy(mensagens[n-1].topico,msg.topico);
-	strcpy(mensagens[n-1].titulo,msg.titulo);
-	mensagens[n-1].duracao=msg.duracao;
-	mensagens[n-1].remetente=msg.remetente;
+	mensagens[n-1]=msg;
 }
 
 void listaTopicos(Msg mensagens[], int totalMensagens){
@@ -85,7 +81,6 @@ void consultarTitulos(Msg mensagens[], int totalMensagens){
    		topico[strlen(topico)-1]='\0';
 	fflush(stdin);
 
-	//LISTA DE TITULOS DESTE TOPICO
 	titulosTopico(mensagens, totalMensagens, topico);
 	return ;
 }
@@ -111,7 +106,6 @@ void consultarMensagem(Msg mensagens[], int totalMensagens){
    		topico[strlen(topico)-1]='\0';
 	fflush(stdin);
 
-	//CONSULTAR MENSAGEM DESTE TOPICO
 	mensagensTopico(mensagens, totalMensagens, topico);
 
 	return ;
@@ -126,8 +120,8 @@ void subscreverTopico(Login cli){
    		topico[strlen(topico)-1]='\0';
 	fflush(stdin);
 
-	for(i=0; i<nmaxmsg && cli.subscricoes[i]!=" "; i++);
-	strcpy(cli.subscricoes[i],topico);	
+	for(i=0; i<nmaxmsg && cli.subscricoes[i].nome!=" "; i++);
+	strcpy(cli.subscricoes[i].nome,topico);	
 
 	return ;
 }
@@ -140,11 +134,11 @@ void cancelarTopico(Login cli){
    		topico[strlen(topico)-1]='\0';
 	fflush(stdin);
 
-	for(int i=0; i<nmaxmsg && cli.subscricoes[i]!=" "; i++){
-		if(strcmp(cli.subscricoes[i],topico)==0){
+	for(int i=0; i<nmaxmsg && cli.subscricoes[i].nome!=" "; i++){
+		if(strcmp(cli.subscricoes[i].nome,topico)==0){
 			for(int j=i; j<nmaxmsg; j++)
-				strcpy(cli.subscricoes[j], cli.subscricoes[j+1]);
-			strcpy(cli.subscricoes[nmaxmsg-1], " ");
+				cli.subscricoes[j]=cli.subscricoes[j+1];
+			strcpy(cli.subscricoes[nmaxmsg-1].nome, " ");
 		}	
 	}
 	return ;
@@ -223,7 +217,7 @@ int main(int argc, char *argv[]){
 	cli.primeiro = 1;
 	strcpy(cli.nome,argv[1]);
 	for(int i=0; i<nmaxmsg; i++)
-		strcpy(cli.subscricoes[i]," ");
+		strcpy(cli.subscricoes[i].nome," ");
 
 	fd_ser = open(FIFO_SERV, O_WRONLY); // escrita
 

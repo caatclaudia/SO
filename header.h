@@ -8,7 +8,6 @@ char fileWN[20]="palavras.txt";
 #define WORDSNOT fileWN
 #define MAXNOT nmaxnot
 #define MAXUSERS maxusers
-#define NAMEBD "medit.db"
 #define MAXCHAR 1000
 #define TIMEOUT 10
 #define TAM 50
@@ -33,7 +32,7 @@ typedef struct{		//ACRESCENTEI
   char nome[20];
   int primeiro;//1 inicio ou 0
   int acesso;//1 login 0 logout
-  Topic subscricoes[nmaxmsg];
+  Topic subscricoes[15];
 }Login;
 
 typedef struct mensagem{

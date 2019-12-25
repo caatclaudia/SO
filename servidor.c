@@ -91,11 +91,7 @@ void iniciaMensagens(Msg mensagens[]){
 }
 
 void adicionaMensagem(Msg mensagens[], int n, Msg msg){
-	strcpy(mensagens[n-1].corpo,msg.corpo);
-	strcpy(mensagens[n-1].topico,msg.topico);
-	strcpy(mensagens[n-1].titulo,msg.titulo);
-	mensagens[n-1].duracao=msg.duracao;
-	mensagens[n-1].remetente=msg.remetente;
+	mensagens[n-1]=msg;
 }
 
 void mensagensTopico(Msg mensagens[], int n, char topico[]){
@@ -129,11 +125,7 @@ int apagarMensagem(Msg mensagens[], int n, int ind){
     }
     
     for(int i=ind-1; i<n-1; i++){
-	    strcpy(mensagens[i].corpo,mensagens[i+1].corpo);
-	    strcpy(mensagens[i].topico,mensagens[i+1].topico);
-	    strcpy(mensagens[i].titulo,mensagens[i+1].titulo);
-	    mensagens[i].duracao=mensagens[i+1].duracao;
-	    mensagens[i].remetente=mensagens[i+1].remetente;
+	    mensagens[i]=mensagens[i+1];	    
     }
     mensagens[n-1].remetente=-1;
     strcpy(mensagens[n-1].corpo," ");
@@ -171,11 +163,7 @@ void apagarTopicosSemMensagens(Msg mensagens[], int totalMensagens){
 	for(int i=0; i<totalMensagens; i++){
 		if(strcmp(mensagens[i].corpo," ")==0){
 			for(int j=i; j<totalMensagens; j++){
-				strcpy(mensagens[j].corpo,mensagens[j+1].corpo);
-	  		  	strcpy(mensagens[j].topico,mensagens[j+1].topico);
-	    			strcpy(mensagens[j].titulo,mensagens[j+1].titulo);
-	    			mensagens[j].duracao=mensagens[j+1].duracao;
-	    			mensagens[j].remetente=mensagens[j+1].remetente;
+				mensagens[j]=mensagens[j+1];
 			}
 			strcpy(mensagens[totalMensagens-1].corpo," ");
   		  	strcpy(mensagens[totalMensagens-1].topico," ");
