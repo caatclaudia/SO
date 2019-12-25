@@ -40,7 +40,28 @@ void consultarTitulos(){
 	return ;
 }
 
-void consultarMensagem(){
+void adicionaMensagem(Msg mensagens[], int n, Msg msg){
+	strcpy(mensagens[n-1].corpo,msg.corpo);
+	strcpy(mensagens[n-1].topico,msg.topico);
+	strcpy(mensagens[n-1].titulo,msg.titulo);
+	mensagens[n-1].duracao=msg.duracao;
+	mensagens[n-1].remetente=msg.remetente;
+}
+
+void mensagensTopico(Msg mensagens[], int n, char topico[]){
+    int EXISTE=0;
+    for(int i=0; i<n; i++){
+	if(strcmp(mensagens[i].topico,topico)==0){
+	    printf("   Mensagem %d - Titulo: %s\n", i+1, mensagens[i].titulo);
+	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
+	    EXISTE=1;
+	}
+    }
+    if(!EXISTE)
+	printf("Nao ha mensagens deste topico!\n");
+}
+
+void consultarMensagem(Msg mensagens[], int totalMensagens){
 	char topico[20];
 	printf("\nTopico>> ");
 	fgets(topico,20,stdin);
@@ -49,6 +70,8 @@ void consultarMensagem(){
 	fflush(stdin);
 
 	//CONSULTAR MENSAGEM DESTE TOPICO
+	mensagensTopico(mensagens, totalMensagens, topico);
+
 	return ;
 }
 
@@ -95,6 +118,16 @@ void subscreverOuCancelar(){
 	return ;
 }
 
+void iniciaMensagens(Msg mensagens[]){
+    for(int i=0; i<nmaxmsg; i++){
+	mensagens[i].remetente=-1;
+	strcpy(mensagens[i].corpo," ");
+	strcpy(mensagens[i].topico," ");
+	strcpy(mensagens[i].titulo," ");
+	mensagens[i].duracao=-1;
+    }
+}
+
 int fd_cli;
 char fifo_name[20];
 
@@ -115,8 +148,11 @@ void trataSig(int i){
 int main(int argc, char *argv[]){
 	
 	char nome[20];
-        int fd_ser, op, res;
+        int fd_ser, op, res, totalMensagens=0;
 	Login cli;
+	Msg mensagens[nmaxmsg];
+
+	iniciaMensagens(mensagens);
 
 	if(argc!=2){
 		return 0;
@@ -196,8 +232,12 @@ int main(int argc, char *argv[]){
 			
 			if(nova.resposta==0)
 				printf("\nMensagem nao foi guardada!\n");
-			else
+			else{
+				totalMensagens++;
+				adicionaMensagem(mensagens, totalMensagens, nova);
 				printf("\nMensagem %d guardada!\n", nova.resposta);
+
+			}	
 		}
 		else if(op==2){
 			consultarTopicos(); //CONSULTAR TOPICOS
@@ -206,7 +246,7 @@ int main(int argc, char *argv[]){
 			consultarTitulos(); //CONSULTAR TITULOS
 		}
 		else if(op==4){
-			consultarMensagem(); //CONSULTAR MENSAGEM DE UM TOPICO
+			consultarMensagem(mensagens, totalMensagens); //CONSULTAR MENSAGEM DE UM TOPICO
 		}	
 		else if(op==5){
 			subscreverOuCancelar(); //SUBSCREVER/CANCELAR SUBSCRICAO DE TOPICO
