@@ -22,23 +22,19 @@ typedef struct{		//ACRESCENTEI
    int ativo;
    int nmensagens;
    int ncliativos;
-}Servidor;
+}Server;
+
+typedef struct{
+   char nome[TAM];
+}Topic;
 
 typedef struct{		//ACRESCENTEI
   int remetente;
   char nome[20];
   int primeiro;//1 inicio ou 0
   int acesso;//1 login 0 logout
+  Topic subscricoes[nmaxmsg];
 }Login;
-
-typedef struct utilizador{
-    char username[TAM];
-    int IDuser;
-}User;
-
-typedef struct servidor{
-    int nclientes;
-}Server;
 
 typedef struct mensagem{
     char corpo[MAXCHAR];

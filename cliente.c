@@ -117,7 +117,8 @@ void consultarMensagem(Msg mensagens[], int totalMensagens){
 	return ;
 }
 
-void subscreverTopico(){
+void subscreverTopico(Login cli){
+	int i;	
 	char topico[20];
 	printf("\n\nTopico>> ");
 	fgets(topico,20,stdin);
@@ -125,11 +126,13 @@ void subscreverTopico(){
    		topico[strlen(topico)-1]='\0';
 	fflush(stdin);
 
-	//SUBSCREVER TOPICO
+	for(i=0; i<nmaxmsg && cli.subscricoes[i]!=" "; i++);
+	strcpy(cli.subscricoes[i],topico);	
+
 	return ;
 }
 
-void cancelarTopico(){
+void cancelarTopico(Login cli){
 	char topico[20];
 	printf("\n\nTopico>> ");
 	fgets(topico,20,stdin);
@@ -137,11 +140,17 @@ void cancelarTopico(){
    		topico[strlen(topico)-1]='\0';
 	fflush(stdin);
 
-	//CANCELAR SUBSCRICAO
+	for(int i=0; i<nmaxmsg && cli.subscricoes[i]!=" "; i++){
+		if(strcmp(cli.subscricoes[i],topico)==0){
+			for(int j=i; j<nmaxmsg; j++)
+				strcpy(cli.subscricoes[j], cli.subscricoes[j+1]);
+			strcpy(cli.subscricoes[nmaxmsg-1], " ");
+		}	
+	}
 	return ;
 }
 
-void subscreverOuCancelar(){
+void subscreverOuCancelar(Login cli){
 	int op;
 	do{
 		printf("\n\n1.Subscrever topico novo\n");
@@ -151,11 +160,11 @@ void subscreverOuCancelar(){
 		scanf(" %d", &op);
 		clean_input();
 	}while(op<1 || op>3);
-	if(op==1){
-		subscreverTopico(); 	//SUBSCREVER TOPICO
+	if(op==1){//SUBSCREVER TOPICO
+		subscreverTopico(cli); 	
 	}
-	else if(op==2){
-		cancelarTopico(); 	//CANCELAR SUBSCRICAO
+	else if(op==2){//CANCELAR SUBSCRICAO
+		cancelarTopico(cli); 	
 	}
 	return ;
 }
@@ -213,6 +222,8 @@ int main(int argc, char *argv[]){
         cli.acesso = 1;
 	cli.primeiro = 1;
 	strcpy(cli.nome,argv[1]);
+	for(int i=0; i<nmaxmsg; i++)
+		strcpy(cli.subscricoes[i]," ");
 
 	fd_ser = open(FIFO_SERV, O_WRONLY); // escrita
 
@@ -271,17 +282,17 @@ int main(int argc, char *argv[]){
 
 			}	
 		}
-		else if(op==2){
-			listaTopicos(mensagens, totalMensagens); //CONSULTAR TOPICOS
+		else if(op==2){//CONSULTAR TOPICOS
+			listaTopicos(mensagens, totalMensagens); 
 		}
-		else if(op==3){
-			consultarTitulos(mensagens, totalMensagens); //CONSULTAR TITULOS DE UM TOPICO
+		else if(op==3){//CONSULTAR TITULOS DE UM TOPICO
+			consultarTitulos(mensagens, totalMensagens); 
 		}
-		else if(op==4){
-			consultarMensagem(mensagens, totalMensagens); //CONSULTAR MENSAGEM DE UM TOPICO
+		else if(op==4){//CONSULTAR MENSAGEM DE UM TOPICO
+			consultarMensagem(mensagens, totalMensagens); 
 		}	
-		else if(op==5){
-			subscreverOuCancelar(); //SUBSCREVER/CANCELAR SUBSCRICAO DE TOPICO
+		else if(op==5){//SUBSCREVER/CANCELAR SUBSCRICAO DE TOPICO
+			subscreverOuCancelar(cli); 
 		}
 		fflush(stdout);
 	}while(op!=6);
