@@ -9,7 +9,7 @@
 void comandosmenu(){
     printf("=========Configuracoes=========\n");
     printf("Ver instrucoes novamente (help) \n");
-    printf("Ligar/desligar  filtragem de palvras proibidas (filter on / filter off)\n");
+    printf("Ligar/desligar  filtragem de palavras proibidas (filter on / filter off)\n");
     printf("Listar utilizadores (users)\n");
     printf("Listar topicos (topics)\n");
     printf("Listar mensagens (msg)\n");
@@ -141,6 +141,30 @@ int apagarMensagem(Msg mensagens[], int n, int ind){
     strcpy(mensagens[n-1].titulo," ");
     mensagens[n-1].duracao=-1;
     return 1;
+}
+
+void listaTopicos(Msg mensagens[], int totalMensagens){
+    Msg aux[nmaxmsg];
+    iniciaMensagens(aux);
+    int topicos=0, EXISTE=-1;
+    
+    for(int i=0; i<totalMensagens; i++){
+	EXISTE=0;
+	for(int j=0; j<topicos; j++)
+	    if(strcmp(mensagens[i].topico,aux[j].topico)==0)
+		EXISTE=1;
+	if(EXISTE==0){
+	    topicos++;
+	    adicionaMensagem(aux, topicos, mensagens[i]);
+	}
+    }	
+    if(EXISTE==-1)
+	printf("Nao ha topicos!\n");
+    else{
+	printf("Topicos: \n");
+	for(int j=0; j<topicos; j++)
+	    printf("-%s\n", aux[j].topico);
+    }
 }
 
 int main(int argc, char *argv[]){   
@@ -281,9 +305,8 @@ int main(int argc, char *argv[]){
 				printf("   %s\n", clientes[i].nome);
 			
 		}
-		else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL){
-			printf("Introduziu comando %s\n", comando);
-			//LISTAR TOPICOS
+		else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL){//LISTAR TOPICOS
+			listaTopicos(mensagens, s.nmensagens);
 		}
 		else if(strcmp(comando,"msg")==0 && comandoAux[1]==NULL){//LISTAR MENSAGENS
 			printf("Lista de mensagens:\n");			
