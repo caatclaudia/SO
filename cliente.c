@@ -14,7 +14,7 @@ void clean_input(void) {
 void menu(){
 	printf("1.Escrever nova mensagem\n");
 	printf("2.Consultar lista de topicos\n");
-	printf("3.Consultar lista de titulos\n");
+	printf("3.Consultar lista de titulos de um topico\n");
 	printf("4.Consultar uma mensagem de um topico\n");
 	printf("5.Subscrever/Cancelar subscricao de um topico\n");
 	printf("6.Sair\n");
@@ -28,7 +28,19 @@ void consultarTopicos(){
 	return;
 }
 
-void consultarTitulos(){
+void titulosTopico(Msg mensagens[], int n, char topico[]){
+    int EXISTE=0;
+    for(int i=0; i<n; i++){
+	if(strcmp(mensagens[i].topico,topico)==0){
+	    printf("   Mensagem %d - Titulo: %s\n\n", i+1, mensagens[i].titulo);
+	    EXISTE=1;
+	}
+    }
+    if(!EXISTE)
+	printf("Nao ha titulos deste topico!\n");
+}
+
+void consultarTitulos(Msg mensagens[], int totalMensagens){
 	char topico[20];
 	printf("\nTopico>> ");
 	fgets(topico,20,stdin);
@@ -37,6 +49,7 @@ void consultarTitulos(){
 	fflush(stdin);
 
 	//LISTA DE TITULOS DESTE TOPICO
+	titulosTopico(mensagens, totalMensagens, topico);
 	return ;
 }
 
@@ -243,7 +256,7 @@ int main(int argc, char *argv[]){
 			consultarTopicos(); //CONSULTAR TOPICOS
 		}
 		else if(op==3){
-			consultarTitulos(); //CONSULTAR TITULOS
+			consultarTitulos(mensagens, totalMensagens); //CONSULTAR TITULOS DE UM TOPICO
 		}
 		else if(op==4){
 			consultarMensagem(mensagens, totalMensagens); //CONSULTAR MENSAGEM DE UM TOPICO
