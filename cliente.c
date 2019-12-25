@@ -12,7 +12,7 @@ void clean_input(void) {
 }
 
 void menu(){
-	printf("1.Escrever nova mensagem\n");
+	printf("\n1.Escrever nova mensagem\n");
 	printf("2.Consultar lista de topicos\n");
 	printf("3.Consultar lista de titulos de um topico\n");
 	printf("4.Consultar uma mensagem de um topico\n");
@@ -22,10 +22,47 @@ void menu(){
 	return ;
 }
 
-void consultarTopicos(){
+void iniciaMensagens(Msg mensagens[]){
+    for(int i=0; i<nmaxmsg; i++){
+	mensagens[i].remetente=-1;
+	strcpy(mensagens[i].corpo," ");
+	strcpy(mensagens[i].topico," ");
+	strcpy(mensagens[i].titulo," ");
+	mensagens[i].duracao=-1;
+    }
+}
 
-	//LISTA DE TOPICOS
-	return;
+void adicionaMensagem(Msg mensagens[], int n, Msg msg){
+	strcpy(mensagens[n-1].corpo,msg.corpo);
+	strcpy(mensagens[n-1].topico,msg.topico);
+	strcpy(mensagens[n-1].titulo,msg.titulo);
+	mensagens[n-1].duracao=msg.duracao;
+	mensagens[n-1].remetente=msg.remetente;
+}
+
+void listaTopicos(Msg mensagens[], int totalMensagens){
+    Msg aux[nmaxmsg];
+    iniciaMensagens(aux);
+    int topicos=0, EXISTE=-1;
+    
+    for(int i=0; i<totalMensagens; i++){
+	EXISTE=0;
+	for(int j=0; j<topicos; j++)
+	    if(strcmp(mensagens[i].topico,aux[j].topico)==0)
+		EXISTE=1;
+	if(EXISTE==0){
+	    topicos++;
+	    adicionaMensagem(aux, topicos, mensagens[i]);
+	}
+    }	
+    if(EXISTE==-1)
+	printf("\n\nNao ha topicos!\n");
+    else{
+	printf("\n\nTopicos: \n");
+	for(int j=0; j<topicos; j++)
+	    printf("-%s\n", aux[j].topico);
+    }
+    return ;
 }
 
 void titulosTopico(Msg mensagens[], int n, char topico[]){
@@ -37,7 +74,7 @@ void titulosTopico(Msg mensagens[], int n, char topico[]){
 	}
     }
     if(!EXISTE)
-	printf("Nao ha titulos deste topico!\n");
+	printf("\n\nNao ha titulos deste topico!\n");
 }
 
 void consultarTitulos(Msg mensagens[], int totalMensagens){
@@ -53,14 +90,6 @@ void consultarTitulos(Msg mensagens[], int totalMensagens){
 	return ;
 }
 
-void adicionaMensagem(Msg mensagens[], int n, Msg msg){
-	strcpy(mensagens[n-1].corpo,msg.corpo);
-	strcpy(mensagens[n-1].topico,msg.topico);
-	strcpy(mensagens[n-1].titulo,msg.titulo);
-	mensagens[n-1].duracao=msg.duracao;
-	mensagens[n-1].remetente=msg.remetente;
-}
-
 void mensagensTopico(Msg mensagens[], int n, char topico[]){
     int EXISTE=0;
     for(int i=0; i<n; i++){
@@ -71,12 +100,12 @@ void mensagensTopico(Msg mensagens[], int n, char topico[]){
 	}
     }
     if(!EXISTE)
-	printf("Nao ha mensagens deste topico!\n");
+	printf("\n\nNao ha mensagens deste topico!\n");
 }
 
 void consultarMensagem(Msg mensagens[], int totalMensagens){
 	char topico[20];
-	printf("\nTopico>> ");
+	printf("\n\nTopico>> ");
 	fgets(topico,20,stdin);
 	if(topico[strlen(topico)-1]=='\n')
    		topico[strlen(topico)-1]='\0';
@@ -90,7 +119,7 @@ void consultarMensagem(Msg mensagens[], int totalMensagens){
 
 void subscreverTopico(){
 	char topico[20];
-	printf("\nTopico>> ");
+	printf("\n\nTopico>> ");
 	fgets(topico,20,stdin);
 	if(topico[strlen(topico)-1]=='\n')
    		topico[strlen(topico)-1]='\0';
@@ -102,7 +131,7 @@ void subscreverTopico(){
 
 void cancelarTopico(){
 	char topico[20];
-	printf("\nTopico>> ");
+	printf("\n\nTopico>> ");
 	fgets(topico,20,stdin);
 	if(topico[strlen(topico)-1]=='\n')
    		topico[strlen(topico)-1]='\0';
@@ -115,7 +144,7 @@ void cancelarTopico(){
 void subscreverOuCancelar(){
 	int op;
 	do{
-		printf("1.Subscrever topico novo\n");
+		printf("\n\n1.Subscrever topico novo\n");
 		printf("2.Cancelar subscricao de topico\n");
 		printf("3.Voltar\n");		
 		printf("Opcao: ");
@@ -131,23 +160,13 @@ void subscreverOuCancelar(){
 	return ;
 }
 
-void iniciaMensagens(Msg mensagens[]){
-    for(int i=0; i<nmaxmsg; i++){
-	mensagens[i].remetente=-1;
-	strcpy(mensagens[i].corpo," ");
-	strcpy(mensagens[i].topico," ");
-	strcpy(mensagens[i].titulo," ");
-	mensagens[i].duracao=-1;
-    }
-}
-
 int fd_cli;
 char fifo_name[20];
 
 void trataSig(int i){
     int fd,res;
     Login c;
-	printf("\n[CLIENTE VAI DESLIGAR]\n");
+	printf("\n\n[CLIENTE VAI DESLIGAR]\n\n");
     c.remetente = getpid();
     c.acesso = 0;
     fd = open(FIFO_SERV,O_WRONLY);
@@ -201,7 +220,7 @@ int main(int argc, char *argv[]){
         res = write(fd_ser,&cli,sizeof(Login));
 	res = read(fd_cli,&cli,sizeof(Login));
   	
-        printf("\nUtilizador: %s\n", cli.nome);
+        printf("\n\nUtilizador: %s\n\n", cli.nome);
 
 	cli.primeiro=0;
 
@@ -216,7 +235,7 @@ int main(int argc, char *argv[]){
 			Msg nova;
 		    	nova.remetente = getpid();
 			nova.resposta=0;
-			printf("\nTopico>> ");
+			printf("\n\nTopico>> ");
 			fgets(nova.topico,TAM,stdin);
 			if(nova.topico[strlen(nova.topico)-1]=='\n')
 				nova.topico[strlen(nova.topico)-1]='\0';
@@ -244,16 +263,16 @@ int main(int argc, char *argv[]){
 			fflush(stdout);	
 			
 			if(nova.resposta==0)
-				printf("\nMensagem nao foi guardada!\n");
+				printf("\n\nMensagem nao foi guardada!\n");
 			else{
 				totalMensagens++;
 				adicionaMensagem(mensagens, totalMensagens, nova);
-				printf("\nMensagem %d guardada!\n", nova.resposta);
+				printf("\n\nMensagem %d guardada!\n", nova.resposta);
 
 			}	
 		}
 		else if(op==2){
-			consultarTopicos(); //CONSULTAR TOPICOS
+			listaTopicos(mensagens, totalMensagens); //CONSULTAR TOPICOS
 		}
 		else if(op==3){
 			consultarTitulos(mensagens, totalMensagens); //CONSULTAR TITULOS DE UM TOPICO
