@@ -277,17 +277,6 @@ int main(int argc, char *argv[]){
 			close(fd_cli);
 		      }
 		}
-		/*else if(r == sizeof(Login) && cli.acesso==-1){
-			sprintf(fifo_name, FIFO_CLI, cli.remetente);
-			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
-			write(fd_cli,&s.nmensagens,sizeof(int));
-			for(int i=0;i<s.nmensagens;i++)	//AQUI
-	                  {
-	                      res = write(fd_cli,&mensagens[i],sizeof(Msg));
-	                  }
-
-			close(fd_cli);
-		}*/
 		else if(r == sizeof(Login) && cli.acesso ==0){
 		        for(int i=0;i<maxusers;i++)
             		    if(listaUsers[i] == cli.remetente){
@@ -402,8 +391,6 @@ int main(int argc, char *argv[]){
 		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL){//APAGAR TOPICOS SEM MENSAGENS
 			printf("\nApagando topicos sem mensagens!\n");
 			apagarTopicosSemMensagens(mensagens);
-			
-			//AVISAR CLIENTES
 		}
 		else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
 			comandosmenu();
