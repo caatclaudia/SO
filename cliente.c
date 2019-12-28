@@ -224,12 +224,18 @@ int main(int argc, char *argv[]){
 	fd_cli = open(fifo_name, O_RDWR);
         res = write(fd_ser,&cli,sizeof(Login));
 	res = read(fd_cli,&cli,sizeof(Login));
+
+	read(fd_cli,&totalMensagens,sizeof(int));
+	for(int i =0;i<totalMensagens;i++){			//AQUI
+		res = read(fd_cli,&mensagens[i],sizeof(Msg));
+	}
   	
         printf("\n\nUtilizador: %s\n\n", cli.nome);
 
 	cli.primeiro=0;
 
 	do{
+		op=0;
 		do{		
 			menu();
 			scanf(" %d", &op);

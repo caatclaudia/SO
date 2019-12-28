@@ -252,6 +252,13 @@ int main(int argc, char *argv[]){
        	        	}
 		        printf("\n%s iniciou sessao!\n",cli.nome);
 			res = write(fd_cli,&cli,sizeof(Login));
+			
+			write(fd_cli,&s.nmensagens,sizeof(int));
+			for(int i=0;i<s.nmensagens;i++)	//AQUI
+	                  {
+	                      res = write(fd_cli,&mensagens[i],sizeof(Msg));
+	                  }
+
 			close(fd_cli);
 		      }
 		}
