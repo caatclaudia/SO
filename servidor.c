@@ -176,7 +176,7 @@ void apagarTopicosSemMensagens(Msg mensagens[], int totalMensagens){
 
 int main(int argc, char *argv[]){   
     char comando[60], *comandoAux[500], fifo_name[20], fifo_name1[20];
-    int num, fd_ser, fd_cli, res, adicionaNome=0, fd_atu;
+    int num, fd_ser, fd_cli, res, adicionaNome=0, fd_atu, n;
     int FLAG_SHUTDOWN = 0, FLAG_FILTER=1;
     fd_set fontes;
     Msg msg, mensagens[nmaxmsg];
@@ -307,8 +307,9 @@ int main(int argc, char *argv[]){
 		read(fd_atu,&cli,sizeof(Login));
 		sprintf(fifo_name, FIFO_CLI, cli.remetente);
 		fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
+		read(fd_atu,&n,sizeof(int));
 		write(fd_cli,&s.nmensagens,sizeof(int));
-		for(int i=0;i<s.nmensagens;i++)	//AQUI
+		for(int i=n;i<s.nmensagens;i++)	//AQUI
 	        {
 	        	res = write(fd_cli,&mensagens[i],sizeof(Msg));
 	        }
@@ -406,6 +407,9 @@ int main(int argc, char *argv[]){
     remove(FIFO_SERV);
     close(fd_ser);
     unlink(FIFO_SERV);
+   remove(FIFO_ATU);
+    close(fd_atu);
+    unlink(FIFO_ATU);
 
     for(int i=0;i<maxusers;i++){
 	if(listaUsers[i] != -1){

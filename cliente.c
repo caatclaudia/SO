@@ -111,30 +111,28 @@ void consultarMensagem(Msg mensagens[], int totalMensagens){
 	return ;
 }
 
-void subscreverTopico(Login cli){
+Login cli;
+
+void subscreverTopico(){
 	int i;	
 	char topico[20];
 	printf("\n\nTopico>> ");
-	fgets(topico,20,stdin);
-	if(topico[strlen(topico)-1]=='\n')
-   		topico[strlen(topico)-1]='\0';
+	scanf(" %s", topico);
 	fflush(stdin);
 
-	for(i=0; i<nmaxmsg && cli.subscricoes[i].nome!=" "; i++);
+	for(i=0; i<nmaxmsg && strcmp(cli.subscricoes[i].nome," ")!=0; i++);
 	strcpy(cli.subscricoes[i].nome,topico);	
 
 	return ;
 }
 
-void cancelarTopico(Login cli){
+void cancelarTopico(){
 	char topico[20];
 	printf("\n\nTopico>> ");
-	fgets(topico,20,stdin);
-	if(topico[strlen(topico)-1]=='\n')
-   		topico[strlen(topico)-1]='\0';
+	scanf(" %s", topico);
 	fflush(stdin);
 
-	for(int i=0; i<nmaxmsg && cli.subscricoes[i].nome!=" "; i++){
+	for(int i=0; i<nmaxmsg && strcmp(cli.subscricoes[i].nome," ")!=0; i++){
 		if(strcmp(cli.subscricoes[i].nome,topico)==0){
 			for(int j=i; j<nmaxmsg; j++)
 				cli.subscricoes[j]=cli.subscricoes[j+1];
@@ -144,7 +142,7 @@ void cancelarTopico(Login cli){
 	return ;
 }
 
-void subscreverOuCancelar(Login cli){
+void subscreverOuCancelar(){
 	int op;
 	do{
 		printf("\n\n1.Subscrever topico novo\n");
@@ -155,12 +153,19 @@ void subscreverOuCancelar(Login cli){
 		clean_input();
 	}while(op<1 || op>3);
 	if(op==1){//SUBSCREVER TOPICO
-		subscreverTopico(cli); 	
+		subscreverTopico(); 	
 	}
 	else if(op==2){//CANCELAR SUBSCRICAO
-		cancelarTopico(cli); 	
+		cancelarTopico(); 	
 	}
 	return ;
+}
+
+int subscreveEsteTopico(char topico[]){
+	for(int i=0; strcmp(cli.subscricoes[i].nome," ")!=0; i++)
+		if(strcmp(cli.subscricoes[i].nome,topico)==0)
+			return 1;
+	return 0;
 }
 
 int fd_cli;
@@ -184,7 +189,6 @@ int main(int argc, char *argv[]){
 	
 	char nome[20], fifo_name1[20];
         int fd_ser, op, res, totalMensagens=0, fd_atu;
-	Login cli;
 	Msg mensagens[nmaxmsg];
 
 	iniciaMensagens(mensagens);
@@ -244,13 +248,16 @@ int main(int argc, char *argv[]){
 	
 		if(op>=2 && op<=4){
 			fd_atu = open(FIFO_ATU, O_WRONLY);
-			//cli.acesso=-1;
 			write(fd_atu,&cli,sizeof(Login));
-			printf("1\n");
-			read(fd_cli,&totalMensagens,sizeof(int)); printf("2\n");
-			for(int i =0;i<totalMensagens;i++){			//AQUI
+			write(fd_atu,&totalMensagens,sizeof(int));
+			int num=totalMensagens;
+			read(fd_cli,&totalMensagens,sizeof(int));
+			for(int i =num;i<totalMensagens;i++){
 				res = read(fd_cli,&mensagens[i],sizeof(Msg));
-			} printf("3\n");
+				if(subscreveEsteTopico(mensagens[i].topico))	//NAO ENTR
+					printf("\nNova mensagem %s do topico %s disponivel durante %d!\n\n", 
+					mensagens[i].titulo, mensagens[i].topico, mensagens[i].duracao);
+			}
 			close(fd_atu);
 		}
 
@@ -304,7 +311,7 @@ int main(int argc, char *argv[]){
 			consultarMensagem(mensagens, totalMensagens); 
 		}	
 		else if(op==5){//SUBSCREVER/CANCELAR SUBSCRICAO DE TOPICO
-			subscreverOuCancelar(cli); 
+			subscreverOuCancelar(); 
 		}
 		fflush(stdout);
 	}while(op!=6);
