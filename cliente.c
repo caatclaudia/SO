@@ -6,9 +6,15 @@
 #include<sys/stat.h>
 #include "header.h"
 
-void clean_input(void) {
-    while (getchar()!='\n');
-    return;
+int scanfInteiro(){
+  int inteiro, fim=0;
+  char tmp;
+  while (fim < 1) {
+    if(scanf(" %d", &inteiro)== 1) 
+        fim++;
+    scanf("%c", &tmp);
+  }
+  return inteiro;
 }
 
 void menu(){
@@ -149,8 +155,7 @@ void subscreverOuCancelar(){
 		printf("2.Cancelar subscricao de topico\n");
 		printf("3.Voltar\n");		
 		printf("Opcao: ");
-		scanf(" %d", &op);
-		clean_input();
+		op=scanfInteiro();
 	}while(op<1 || op>3);
 	if(op==1){//SUBSCREVER TOPICO
 		subscreverTopico(); 	
@@ -242,8 +247,7 @@ int main(int argc, char *argv[]){
 		op=0;
 		do{		
 			menu();
-			scanf(" %d", &op);
-			clean_input();
+			op=scanfInteiro();
 		}while(op<1 || op>6);
 	
 		if(op>=2 && op<=4){
@@ -278,8 +282,7 @@ int main(int argc, char *argv[]){
 			fflush(stdin);
 
 			printf("\nDuracao>> ");	
-			scanf(" %d", &nova.duracao);
-			clean_input();
+			nova.duracao=scanfInteiro();
 		
 			printf("\nCorpo>> ");
 			fgets(nova.corpo,MAXCHAR,stdin);
