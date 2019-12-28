@@ -16,6 +16,7 @@ char fileWN[20]="palavras.txt";
 
 #define FIFO_SERV "SERV"
 #define FIFO_CLI "CLI%d"
+#define FIFO_ATU "ATU"
 
 typedef struct{		//ACRESCENTEI
    int ativo;

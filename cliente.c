@@ -182,8 +182,8 @@ void trataSig(int i){
 
 int main(int argc, char *argv[]){
 	
-	char nome[20];
-        int fd_ser, op, res, totalMensagens=0;
+	char nome[20], fifo_name1[20];
+        int fd_ser, op, res, totalMensagens=0, fd_atu;
 	Login cli;
 	Msg mensagens[nmaxmsg];
 
@@ -241,6 +241,18 @@ int main(int argc, char *argv[]){
 			scanf(" %d", &op);
 			clean_input();
 		}while(op<1 || op>6);
+	
+		if(op>=2 && op<=4){
+			fd_atu = open(FIFO_ATU, O_WRONLY);
+			//cli.acesso=-1;
+			write(fd_atu,&cli,sizeof(Login));
+			printf("1\n");
+			read(fd_cli,&totalMensagens,sizeof(int)); printf("2\n");
+			for(int i =0;i<totalMensagens;i++){			//AQUI
+				res = read(fd_cli,&mensagens[i],sizeof(Msg));
+			} printf("3\n");
+			close(fd_atu);
+		}
 
 		if(op==1){//ESCREVER MENSAGEM
 			Msg nova;
@@ -300,6 +312,7 @@ int main(int argc, char *argv[]){
 	cli.acesso=0;
 	write(fd_ser,&cli,sizeof(Login));
 
+	close(fd_atu);
 	close(fd_cli);
 	close(fd_ser);
 	unlink(fifo_name);

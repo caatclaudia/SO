@@ -175,8 +175,8 @@ void apagarTopicosSemMensagens(Msg mensagens[], int totalMensagens){
 }
 
 int main(int argc, char *argv[]){   
-    char comando[60], *comandoAux[500], fifo_name[20];
-    int num, fd_ser, fd_cli, res, adicionaNome=0;
+    char comando[60], *comandoAux[500], fifo_name[20], fifo_name1[20];
+    int num, fd_ser, fd_cli, res, adicionaNome=0, fd_atu;
     int FLAG_SHUTDOWN = 0, FLAG_FILTER=1;
     fd_set fontes;
     Msg msg, mensagens[nmaxmsg];
@@ -200,6 +200,8 @@ int main(int argc, char *argv[]){
 	exit(EXIT_FAILURE);
     }
     fd_ser = open(FIFO_SERV, O_RDWR);
+	mkfifo(FIFO_ATU, 0600);
+	fd_atu = open(FIFO_ATU, O_RDWR);
 
     if(getenv("MAXNOT") != NULL)
         nmaxnot = atoi(getenv("MAXNOT"));
@@ -222,11 +224,12 @@ int main(int argc, char *argv[]){
 	fflush(stdout);
 
 	FD_ZERO(&fontes);
-        FD_SET(0, &fontes);
+        //FD_SET(0, &fontes);
         FD_SET(fd_ser, &fontes);
+	FD_SET(fd_atu, &fontes);
 	t.tv_sec=20;
 	t.tv_usec=0;
-        res = select(fd_ser + 1, &fontes, NULL, NULL, &t);
+        res = select(fd_atu + 1, &fontes, NULL, NULL, &t);
 
 	
 	if(res>0 && FD_ISSET(fd_ser, &fontes)) {		//FIFO
@@ -262,6 +265,17 @@ int main(int argc, char *argv[]){
 			close(fd_cli);
 		      }
 		}
+		/*else if(r == sizeof(Login) && cli.acesso==-1){
+			sprintf(fifo_name, FIFO_CLI, cli.remetente);
+			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
+			write(fd_cli,&s.nmensagens,sizeof(int));
+			for(int i=0;i<s.nmensagens;i++)	//AQUI
+	                  {
+	                      res = write(fd_cli,&mensagens[i],sizeof(Msg));
+	                  }
+
+			close(fd_cli);
+		}*/
 		else if(r == sizeof(Login) && cli.acesso ==0){
 		        for(int i=0;i<maxusers;i++)
             		    if(listaUsers[i] == cli.remetente){
@@ -289,6 +303,18 @@ int main(int argc, char *argv[]){
 			close(fd_cli);
 		}
     	}
+	if(res>0 && FD_ISSET(fd_atu, &fontes)) {
+		read(fd_atu,&cli,sizeof(Login));
+		sprintf(fifo_name, FIFO_CLI, cli.remetente);
+		fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
+		write(fd_cli,&s.nmensagens,sizeof(int));
+		for(int i=0;i<s.nmensagens;i++)	//AQUI
+	        {
+	        	res = write(fd_cli,&mensagens[i],sizeof(Msg));
+	        }
+		printf("\nAtualizacao feita no cliente %d\n\n", cli.remetente);
+		close(fd_cli);
+	}
     	else if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
 		fgets(comando,60,stdin);
 		comando[strlen(comando) - 1] = '\0';
