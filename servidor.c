@@ -6,6 +6,9 @@
 #include<sys/stat.h>
 #include"header.h"
 
+Topic topicos[50];
+Server s;
+
 void comandosmenu(){
     printf("=========Configuracoes=========\n");
     printf("Ver instrucoes novamente (help) \n");
@@ -19,6 +22,7 @@ void comandosmenu(){
     printf("Desligar o gestor (shutdown)\n");
     printf("Eliminar topicos sem mensagens (prune) \n");
     printf("===============================\n\n");
+    return ;
 }
 
 void settings(){
@@ -29,6 +33,7 @@ void settings(){
     printf("Valor de Timeout: %d\n", TIMEOUT);
     printf("Nome de ficheiro de palavras proibidas: %s\n",fileWN);
     printf("=========================================\n\n");
+    return ;
 }
 
 void chamaVerificador(char *frase){
@@ -62,9 +67,9 @@ int adicionacliente(Login m[],int *n,Login c){
 	return 1;
 }
 
-int existecliente(Login m[], int n, char nome[]){
+int existecliente(Login m[], char nome[]){
     int i;
-    for(i=0; i<n; i++){
+    for(i=0; i<s.ncliativos; i++){
 	if(strcmp(m[i].nome,nome)==0)
         	return 1;
     }
@@ -78,6 +83,7 @@ void eliminacliente(Login m[],int *n,int pid){
  	       m[i] = m[*n-1];
  	       (*n)--;
 	}
+	return ;
 }
 
 void iniciaMensagens(Msg mensagens[]){
@@ -88,15 +94,30 @@ void iniciaMensagens(Msg mensagens[]){
 	strcpy(mensagens[i].titulo," ");
 	mensagens[i].duracao=-1;
     }
+    s.ntopicos=0;
+    s.nmensagens=0;
+    for(int i=0; i<50; i++)
+	strcpy(topicos[i].nome," ");
+    return ;
 }
 
-void adicionaMensagem(Msg mensagens[], int n, Msg msg){
-	mensagens[n-1]=msg;
+void adicionaTopico(char topico[]){
+	for(int i=0; i<s.ntopicos; i++)
+		if(strcmp(topicos[i].nome,topico)==0)
+			return ;
+	s.ntopicos++;
+	strcpy(topicos[s.ntopicos-1].nome,topico);
+	return ;
 }
 
-void mensagensTopico(Msg mensagens[], int n, char topico[]){
+void adicionaMensagem(Msg mensagens[], Msg msg){
+	mensagens[s.nmensagens-1]=msg;
+	adicionaTopico(msg.topico);
+}
+
+void mensagensTopico(Msg mensagens[], char topico[]){
     int EXISTE=0;
-    for(int i=0; i<n; i++){
+    for(int i=0; i<s.nmensagens; i++){
 	if(strcmp(mensagens[i].topico,topico)==0){
 	    printf("   Mensagem %d - Titulo: %s\n", i+1, mensagens[i].titulo);
 	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
@@ -105,73 +126,65 @@ void mensagensTopico(Msg mensagens[], int n, char topico[]){
     }
     if(!EXISTE)
 	printf("Nao ha mensagens deste topico!\n");
+    return ;
 }
 
-void listaMensagens(Msg mensagens[], int n){
+void listaMensagens(Msg mensagens[]){
     int i;
-    for(i=0; i<n; i++){
+    for(i=0; i<s.nmensagens; i++){
 	    printf("   Mensagem %d - Topico: %s\n", i+1, mensagens[i].topico);
 	    printf("   Titulo: %s\n", mensagens[i].titulo);
 	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
     }
     if(i==0)
 	printf("Nao ha mensagens!\n");
+    return ;
 }
 
-int apagarMensagem(Msg mensagens[], int n, int ind){
-    if(ind>n || ind<0){
+int apagarMensagem(Msg mensagens[], int ind){
+    if(ind>s.nmensagens || ind<0){
 	printf("Esta mensagem nao existe!\n");
 	return 0;
     }
     
-    for(int i=ind-1; i<n-1; i++){
+    for(int i=ind-1; i<s.nmensagens-1; i++){
 	    mensagens[i]=mensagens[i+1];	    
     }
-    mensagens[n-1].remetente=-1;
-    strcpy(mensagens[n-1].corpo," ");
-    strcpy(mensagens[n-1].topico," ");
-    strcpy(mensagens[n-1].titulo," ");
-    mensagens[n-1].duracao=-1;
+    mensagens[s.nmensagens-1].remetente=-1;
+    strcpy(mensagens[s.nmensagens-1].corpo," ");
+    strcpy(mensagens[s.nmensagens-1].topico," ");
+    strcpy(mensagens[s.nmensagens-1].titulo," ");
+    mensagens[s.nmensagens-1].duracao=-1;
     return 1;
 }
 
-void listaTopicos(Msg mensagens[], int totalMensagens){
-    Msg aux[nmaxmsg];
-    iniciaMensagens(aux);
-    int topicos=0, EXISTE=-1;
-    
-    for(int i=0; i<totalMensagens; i++){
-	EXISTE=0;
-	for(int j=0; j<topicos; j++)
-	    if(strcmp(mensagens[i].topico,aux[j].topico)==0)
-		EXISTE=1;
-	if(EXISTE==0){
-	    topicos++;
-	    adicionaMensagem(aux, topicos, mensagens[i]);
-	}
-    }	
-    if(EXISTE==-1)
+void listaTopicos(){
+    if(s.ntopicos==0){
 	printf("Nao ha topicos!\n");
-    else{
-	printf("Topicos: \n");
-	for(int j=0; j<topicos; j++)
-	    printf("-%s\n", aux[j].topico);
+	return ;
     }
+    printf("Topicos: \n");
+    for(int i=0; i<s.ntopicos; i++)
+	printf("-%s\n", topicos[i].nome);
+    return ;
 }
 
-void apagarTopicosSemMensagens(Msg mensagens[], int totalMensagens){
-	for(int i=0; i<totalMensagens; i++){
-		if(strcmp(mensagens[i].corpo," ")==0){
-			for(int j=i; j<totalMensagens; j++){
-				mensagens[j]=mensagens[j+1];
-			}
-			strcpy(mensagens[totalMensagens-1].corpo," ");
-  		  	strcpy(mensagens[totalMensagens-1].topico," ");
-    			strcpy(mensagens[totalMensagens-1].titulo," ");
-    			mensagens[totalMensagens-1].duracao=-1;
-    			mensagens[totalMensagens-1].remetente=-1;
-		}	
+void apagarTopicosSemMensagens(Msg mensagens[]){
+	int EXISTE=0;
+	for(int i=0; i<s.ntopicos; i++){
+		EXISTE=0;
+		for(int j=0; j<s.nmensagens && EXISTE==0; j++){
+			if(strcmp(mensagens[j].topico,topicos[i].nome)==0)
+				EXISTE=1;	
+		}
+		if(!EXISTE){
+			for(int j=i; j<s.ntopicos-1; j++)
+				topicos[j]=topicos[j+1];
+			strcpy(topicos[s.ntopicos-1].nome," ");
+			s.ntopicos--;
+		}
 	}
+	return ;
 }
 
 int main(int argc, char *argv[]){   
@@ -182,14 +195,13 @@ int main(int argc, char *argv[]){
     Msg msg, mensagens[nmaxmsg];
     struct timeval t;
     Login cli, clientes[maxusers];
-    Server s;
     int numcli=0, r;
 
     int listaUsers[maxusers];
     for(int i = 0;i<maxusers;i++)
 	listaUsers[i] = -1;
+
     iniciaMensagens(mensagens);
-    s.nmensagens=0;
 
     if(access(FIFO_SERV, F_OK)==0) { //verificar se o sv esta aberto
     	fprintf(stderr, "[ERROR] Server ja existe.\n");
@@ -238,7 +250,7 @@ int main(int argc, char *argv[]){
 		      if(r == sizeof(Login) && cli.acesso == 1){
 			sprintf(fifo_name, FIFO_CLI, cli.remetente);
 			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
-			while(existecliente(clientes, s.ncliativos, cli.nome)){
+			while(existecliente(clientes, cli.nome)){
 				adicionaNome++;
 				char adiciona[20];
 				adiciona[0]=adicionaNome+'0';
@@ -297,7 +309,7 @@ int main(int argc, char *argv[]){
 					chamaVerificador(msg.corpo);
 	               	        s.nmensagens++;
 				msg.resposta=s.nmensagens;
-				adicionaMensagem(mensagens, s.nmensagens, msg);
+				adicionaMensagem(mensagens, msg);
        	        	}
 			write(fd_cli, &msg, sizeof(Msg));
 			close(fd_cli);
@@ -312,6 +324,11 @@ int main(int argc, char *argv[]){
 		for(int i=n;i<s.nmensagens;i++)	//AQUI
 	        {
 	        	res = write(fd_cli,&mensagens[i],sizeof(Msg));
+	        }
+		write(fd_cli,&s.ntopicos,sizeof(int));
+		for(int i=0;i<s.ntopicos;i++)	//AQUI
+	        {
+	        	res = write(fd_cli,&topicos[i],sizeof(Topic));
 	        }
 		printf("\nAtualizacao feita no cliente %d\n\n", cli.remetente);
 		close(fd_cli);
@@ -347,20 +364,20 @@ int main(int argc, char *argv[]){
 			
 		}
 		else if(strcmp(comando,"topics")==0 && comandoAux[1]==NULL){//LISTAR TOPICOS
-			listaTopicos(mensagens, s.nmensagens);
+			listaTopicos(mensagens);
 		}
 		else if(strcmp(comando,"msg")==0 && comandoAux[1]==NULL){//LISTAR MENSAGENS
 			printf("Lista de mensagens:\n");			
-			listaMensagens(mensagens, s.nmensagens);
+			listaMensagens(mensagens);
 		}
 		else if(strcmp(comando,"topic")==0 && comandoAux[1]!=NULL){//LISTAR MENSAGENS DESTE TOPICO
 			printf("Topico: %s\n", comandoAux[1]);
-			mensagensTopico(mensagens, s.nmensagens, comandoAux[1]);
+			mensagensTopico(mensagens, comandoAux[1]);
 		}
 		else if(strcmp(comando,"del")==0 && comandoAux!=NULL){//APAGAR MENSAGEM
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			int v=atoi(comandoAux[1]);
-			if(apagarMensagem(mensagens, s.nmensagens, v))
+			if(apagarMensagem(mensagens, v))
 				s.nmensagens--;
 			
 		}
@@ -384,7 +401,7 @@ int main(int argc, char *argv[]){
 		}
 		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL){//APAGAR TOPICOS SEM MENSAGENS
 			printf("\nApagando topicos sem mensagens!\n");
-			apagarTopicosSemMensagens(mensagens, s.nmensagens);
+			apagarTopicosSemMensagens(mensagens);
 			
 			//AVISAR CLIENTES
 		}

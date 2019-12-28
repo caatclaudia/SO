@@ -6,6 +6,10 @@
 #include<sys/stat.h>
 #include "header.h"
 
+Login cli;
+Topic topicos[50];
+int ntopicos;
+
 int scanfInteiro(){
   int inteiro, fim=0;
   char tmp;
@@ -36,34 +40,38 @@ void iniciaMensagens(Msg mensagens[]){
 	strcpy(mensagens[i].titulo," ");
 	mensagens[i].duracao=-1;
     }
+    return ;
+}
+
+void adicionaTopico(char topico[]){
+	for(int i=0; i<ntopicos; i++)
+		if(strcmp(topicos[i].nome,topico)==0)
+			return ;
+	ntopicos++;
+	strcpy(topicos[ntopicos-1].nome,topico);
 }
 
 void adicionaMensagem(Msg mensagens[], int n, Msg msg){
 	mensagens[n-1]=msg;
+	adicionaTopico(msg.topico);
+	return ;
 }
 
-void listaTopicos(Msg mensagens[], int totalMensagens){
-    Msg aux[nmaxmsg];
-    iniciaMensagens(aux);
-    int topicos=0, EXISTE=-1;
-    
-    for(int i=0; i<totalMensagens; i++){
-	EXISTE=0;
-	for(int j=0; j<topicos; j++)
-	    if(strcmp(mensagens[i].topico,aux[j].topico)==0)
-		EXISTE=1;
-	if(EXISTE==0){
-	    topicos++;
-	    adicionaMensagem(aux, topicos, mensagens[i]);
-	}
-    }	
-    if(EXISTE==-1)
-	printf("\n\nNao ha topicos!\n");
-    else{
-	printf("\n\nTopicos: \n");
-	for(int j=0; j<topicos; j++)
-	    printf("-%s\n", aux[j].topico);
+void listaTopicos(){
+    if(ntopicos==0){
+	printf("Nao ha topicos!\n");
+	return ;
     }
+    printf("Topicos: \n");
+    for(int i=0; i<ntopicos; i++)
+	printf("-%s\n", topicos[i].nome);
+    return ;
+}
+
+void apagaTopicos(){
+    for(int i=0; i<ntopicos; i++)
+	strcpy(topicos[i].nome," ");
+    ntopicos=0;
     return ;
 }
 
@@ -77,6 +85,7 @@ void titulosTopico(Msg mensagens[], int n, char topico[]){
     }
     if(!EXISTE)
 	printf("\n\nNao ha titulos deste topico!\n");
+    return ;
 }
 
 void consultarTitulos(Msg mensagens[], int totalMensagens){
@@ -102,6 +111,7 @@ void mensagensTopico(Msg mensagens[], int n, char topico[]){
     }
     if(!EXISTE)
 	printf("\n\nNao ha mensagens deste topico!\n");
+    return ;
 }
 
 void consultarMensagem(Msg mensagens[], int totalMensagens){
@@ -113,22 +123,37 @@ void consultarMensagem(Msg mensagens[], int totalMensagens){
 	fflush(stdin);
 
 	mensagensTopico(mensagens, totalMensagens, topico);
-
 	return ;
 }
 
-Login cli;
+int subscreveEsteTopico(char topico[]){
+	for(int i=0; strcmp(cli.subscricoes[i].nome," ")!=0; i++)
+		if(strcmp(cli.subscricoes[i].nome,topico)==0)
+			return 1;
+	return 0;
+}
 
 void subscreverTopico(){
-	int i;	
+	int i, EXISTE=0;	
 	char topico[20];
 	printf("\n\nTopico>> ");
 	scanf(" %s", topico);
 	fflush(stdin);
 
-	for(i=0; i<nmaxmsg && strcmp(cli.subscricoes[i].nome," ")!=0; i++);
-	strcpy(cli.subscricoes[i].nome,topico);	
-
+	if(subscreveEsteTopico(topico)){
+		printf("\nJa subscreve este topico\n");
+		return ;
+	}
+	for(i=0; i<ntopicos; i++)
+		if(strcmp(topicos[i].nome,topico)==0)
+			EXISTE=1;
+	if(EXISTE){
+		for(i=0; i<nmaxmsg && strcmp(cli.subscricoes[i].nome," ")!=0; i++);
+		strcpy(cli.subscricoes[i].nome,topico);	
+		printf("\nSubscricao do topico '%s'\n", topico);
+	}
+	else
+		printf("\nEste topico nao existe!\n\n");
 	return ;
 }
 
@@ -138,6 +163,11 @@ void cancelarTopico(){
 	scanf(" %s", topico);
 	fflush(stdin);
 
+	if(!subscreveEsteTopico(topico)){
+		printf("\nNao subscreve este topico\n");
+		return ;
+	}
+
 	for(int i=0; i<nmaxmsg && strcmp(cli.subscricoes[i].nome," ")!=0; i++){
 		if(strcmp(cli.subscricoes[i].nome,topico)==0){
 			for(int j=i; j<nmaxmsg; j++)
@@ -145,6 +175,8 @@ void cancelarTopico(){
 			strcpy(cli.subscricoes[nmaxmsg-1].nome, " ");
 		}	
 	}
+	printf("\nCancelada subscricao do topico '%s'\n", topico);
+	
 	return ;
 }
 
@@ -166,13 +198,6 @@ void subscreverOuCancelar(){
 	return ;
 }
 
-int subscreveEsteTopico(char topico[]){
-	for(int i=0; strcmp(cli.subscricoes[i].nome," ")!=0; i++)
-		if(strcmp(cli.subscricoes[i].nome,topico)==0)
-			return 1;
-	return 0;
-}
-
 int fd_cli;
 char fifo_name[20];
 
@@ -191,7 +216,7 @@ void trataSig(int i){
 }
 
 int main(int argc, char *argv[]){
-	
+	int ntopicos=0;
 	char nome[20], fifo_name1[20];
         int fd_ser, op, res, totalMensagens=0, fd_atu;
 	Msg mensagens[nmaxmsg];
@@ -251,16 +276,22 @@ int main(int argc, char *argv[]){
 		}while(op<1 || op>6);
 	
 		if(op>=2 && op<=4){
-			fd_atu = open(FIFO_ATU, O_WRONLY);
+		        fd_atu = open(FIFO_ATU, O_WRONLY);
 			write(fd_atu,&cli,sizeof(Login));
 			write(fd_atu,&totalMensagens,sizeof(int));
 			int num=totalMensagens;
 			read(fd_cli,&totalMensagens,sizeof(int));
 			for(int i =num;i<totalMensagens;i++){
-				res = read(fd_cli,&mensagens[i],sizeof(Msg));
+				read(fd_cli,&mensagens[i],sizeof(Msg));
 				if(subscreveEsteTopico(mensagens[i].topico))	//NAO ENTR
 					printf("\nNova mensagem %s do topico %s disponivel durante %d!\n\n", 
 					mensagens[i].titulo, mensagens[i].topico, mensagens[i].duracao);
+			}
+			apagaTopicos();			
+			read(fd_cli,&ntopicos,sizeof(int));
+			for(int i =0;i<ntopicos;i++){
+				read(fd_cli,&topicos[i],sizeof(Topic));
+				adicionaTopico(topicos[i].nome);
 			}
 			close(fd_atu);
 		}
@@ -305,7 +336,7 @@ int main(int argc, char *argv[]){
 			}	
 		}
 		else if(op==2){//CONSULTAR TOPICOS
-			listaTopicos(mensagens, totalMensagens); 
+			listaTopicos(); 
 		}
 		else if(op==3){//CONSULTAR TITULOS DE UM TOPICO
 			consultarTitulos(mensagens, totalMensagens); 

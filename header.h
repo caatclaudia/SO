@@ -20,6 +20,7 @@ char fileWN[20]="palavras.txt";
 
 typedef struct{		//ACRESCENTEI
    int ativo;
+   int ntopicos;
    int nmensagens;
    int ncliativos;
 }Server;
