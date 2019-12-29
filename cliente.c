@@ -4,6 +4,7 @@
 #include<string.h>
 #include<sys/wait.h>
 #include<sys/stat.h>
+#include<signal.h>
 #include "header.h"
 
 Login cli;
@@ -218,7 +219,7 @@ void subscreverOuCancelar(){
 int fd_cli;
 char fifo_name[20];
 
-void trataSig(int i){
+void sair(int n){
     int fd,res;
     Login c;
 	printf("\n\n[CLIENTE VAI DESLIGAR]\n\n");
@@ -232,11 +233,20 @@ void trataSig(int i){
     exit(EXIT_FAILURE);
 }
 
+void trataSig(int i){
+    sair(i);
+}
+
 int main(int argc, char *argv[]){
 	int ntopicos=0;
 	char nome[20], fifo_name1[20];
         int fd_ser, op, res, fd_atu;
 	Msg mensagens[nmaxmsg];
+
+	struct sigaction act;
+	act.sa_handler=sair;
+	act.sa_flags=0;		//usar funcao void sair(int)
+	sigaction(SIGALRM, &act, NULL);
 
 	iniciaMensagens(mensagens);
 
@@ -289,8 +299,12 @@ int main(int argc, char *argv[]){
 		op=0;
 		do{		
 			menu();
+			alarm(10);
 			op=scanfInteiro();
+			alarm(0);
 		}while(op<1 || op>6);
+		if(SIGALRM==0)
+			sair(0);
 	
 		if(op>=2 && op<=4){
 		        fd_atu = open(FIFO_ATU, O_WRONLY);

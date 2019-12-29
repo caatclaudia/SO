@@ -88,16 +88,16 @@ void eliminacliente(Login m[],int *n,int pid){
 
 void iniciaMensagens(Msg mensagens[]){
     for(int i=0; i<nmaxmsg; i++){
-	mensagens[i].remetente=-1;
-	strcpy(mensagens[i].corpo," ");
-	strcpy(mensagens[i].topico," ");
-	strcpy(mensagens[i].titulo," ");
-	mensagens[i].duracao=-1;
+		mensagens[i].remetente=-1;
+		strcpy(mensagens[i].corpo," ");
+		strcpy(mensagens[i].topico," ");
+		strcpy(mensagens[i].titulo," ");
+		mensagens[i].duracao=-1;
     }
     s.ntopicos=0;
     s.nmensagens=0;
     for(int i=0; i<50; i++)
-	strcpy(topicos[i].nome," ");
+		strcpy(topicos[i].nome," ");
     return ;
 }
 
@@ -107,6 +107,7 @@ void adicionaTopico(char topico[]){
 			return ;
 	s.ntopicos++;
 	strcpy(topicos[s.ntopicos-1].nome,topico);
+	fprintf(stderr,"Topico '%s' adicionado!\n", topico);
 	return ;
 }
 
@@ -118,14 +119,14 @@ void adicionaMensagem(Msg mensagens[], Msg msg){
 void mensagensTopico(Msg mensagens[], char topico[]){
     int EXISTE=0;
     for(int i=0; i<s.nmensagens; i++){
-	if(strcmp(mensagens[i].topico,topico)==0){
-	    printf("   Mensagem %d - Titulo: %s\n", i+1, mensagens[i].titulo);
-	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
-	    EXISTE=1;
-	}
+		if(strcmp(mensagens[i].topico,topico)==0){
+			printf("   Mensagem %d - Titulo: %s\n", i+1, mensagens[i].titulo);
+			printf("   Mensagem: %s\n\n", mensagens[i].corpo);
+			EXISTE=1;
+		}
     }
     if(!EXISTE)
-	printf("Nao ha mensagens deste topico!\n");
+		printf("Nao ha mensagens deste topico!\n");
     return ;
 }
 
@@ -137,14 +138,14 @@ void listaMensagens(Msg mensagens[]){
 	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
     }
     if(i==0)
-	printf("Nao ha mensagens!\n");
+		printf("Nao ha mensagens!\n");
     return ;
 }
 
 int apagarMensagem(Msg mensagens[], int ind){
     if(ind>s.nmensagens || ind<0){
-	printf("Esta mensagem nao existe!\n");
-	return 0;
+		printf("Esta mensagem nao existe!\n");
+		return 0;
     }
     
     for(int i=ind-1; i<s.nmensagens-1; i++){
@@ -160,12 +161,12 @@ int apagarMensagem(Msg mensagens[], int ind){
 
 void listaTopicos(){
     if(s.ntopicos==0){
-	printf("Nao ha topicos!\n");
-	return ;
+		printf("Nao ha topicos!\n");
+		return ;
     }
     printf("Topicos: \n");
     for(int i=0; i<s.ntopicos; i++)
-	printf("-%s\n", topicos[i].nome);
+		printf("-%s\n", topicos[i].nome);
     return ;
 }
 
@@ -178,6 +179,7 @@ void apagarTopicosSemMensagens(Msg mensagens[]){
 				EXISTE=1;	
 		}
 		if(!EXISTE){
+			fprintf(stderr,"Apagado topico '%s' !\n", topicos[i]);
 			for(int j=i; j<s.ntopicos-1; j++)
 				topicos[j]=topicos[j+1];
 			strcpy(topicos[s.ntopicos-1].nome," ");
@@ -208,8 +210,8 @@ int main(int argc, char *argv[]){
       	return EXIT_FAILURE;
     }
     if(mkfifo(FIFO_SERV, 0600) == -1){
-	perror("\nmkfifo do FIFO do servidor deu erro");
-	exit(EXIT_FAILURE);
+		fprintf(stderr,"\nmkfifo do FIFO do servidor deu erro");
+		exit(EXIT_FAILURE);
     }
     fd_ser = open(FIFO_SERV, O_RDWR);
 	mkfifo(FIFO_ATU, 0600);
@@ -265,7 +267,7 @@ int main(int argc, char *argv[]){
         	      	      		}
                    	        }
        	        	}
-		        printf("\n%s iniciou sessao!\n",cli.nome);
+		        fprintf(stderr,"\n%s iniciou sessao!\n",cli.nome);
 			res = write(fd_cli,&cli,sizeof(Login));
 			
 			write(fd_cli,&s.nmensagens,sizeof(int));
@@ -283,14 +285,14 @@ int main(int argc, char *argv[]){
 			        listaUsers[i] = -1;
             		    	s.ncliativos--;
             	                eliminacliente(clientes,&numcli,cli.remetente);
-            			printf("\n[Cliente %d a terminar]\n",cli.remetente);
+            			fprintf(stderr,"\n[Cliente %d a terminar]\n",cli.remetente);
             		}
         	}
 		else{
 			sprintf(fifo_name, FIFO_CLI, cli.remetente);
 			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
 			read(fd_ser, &msg, sizeof(Msg));
-			printf("\nInterrompido...\nRecebi '%s'\n\n", msg.corpo);
+			fprintf(stderr,"\nInterrompido...\nRecebi '%s'\n\n", msg.corpo);
 
 			if(s.nmensagens < nmaxmsg){
 				//VERIFICA AS PALAVRAS MAS
@@ -319,7 +321,7 @@ int main(int argc, char *argv[]){
 	        {
 	        	res = write(fd_cli,&topicos[i],sizeof(Topic));
 	        }
-		printf("\nAtualizacao feita no cliente %d\n\n", cli.remetente);
+		fprintf(stderr,"\nAtualizacao feita no cliente %d\n\n", cli.remetente);
 		close(fd_cli);
 	}
     	else if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
@@ -378,7 +380,7 @@ int main(int argc, char *argv[]){
 			        			listaUsers[i] = -1;
             		    				s.ncliativos--;
             	                			eliminacliente(clientes,&numcli,clientes[i].remetente);
-            						printf("\n[Cliente %d a terminar]\n",clientes[i].remetente);
+            						fprintf(stderr,"\n[Cliente %d a terminar]\n",clientes[i].remetente);
 							kill(clientes[i].remetente,SIGINT);
             					}
 				}
@@ -386,7 +388,7 @@ int main(int argc, char *argv[]){
 		}
 		else if(strcmp(comando,"shutdown")==0 && comandoAux[1]==NULL){
 			FLAG_SHUTDOWN = 1;
-			printf("\n\n ===========Servidor vai desligar==========\n\n");
+			fprintf(stderr,"\n\n ===========Servidor vai desligar==========\n\n");
 		}
 		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL){//APAGAR TOPICOS SEM MENSAGENS
 			printf("\nApagando topicos sem mensagens!\n");
@@ -403,7 +405,7 @@ int main(int argc, char *argv[]){
 		}
 	}
 	else if(res==0){
-		printf("TIMEOUT\n\n");
+		fprintf(stderr,"TIMEOUT\n\n");
 		FLAG_SHUTDOWN=1;
 	}
     }while (FLAG_SHUTDOWN != 1);
