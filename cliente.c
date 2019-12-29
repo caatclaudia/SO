@@ -5,7 +5,11 @@
 #include<sys/wait.h>
 #include<sys/stat.h>
 #include<signal.h>
+#include<curses.h>
 #include "header.h"
+
+#define MEIO 10
+#define FIM 20
 
 Login cli;
 Topic topicos[50];
@@ -14,23 +18,37 @@ int totalMensagens;
 
 int scanfInteiro(){
   int inteiro, fim=0;
-  char tmp;
   while (fim < 1) {
-    if(scanf(" %d", &inteiro)== 1) 
+    if(scanw(" %d", &inteiro)== 1) 
         fim++;
-    scanf("%c", &tmp);
   }
   return inteiro;
 }
 
+void limpaFirst(){
+	for(int i=0; i<MEIO; i++){
+		mvprintw(i,0, "                                                ");
+		refresh();
+	}
+}
+
+void limpaSec(){
+	for(int i=MEIO; i<FIM; i++){
+		mvprintw(i,0, "                                                ");
+		refresh();
+	}
+}
+
 void menu(){
-	printf("\n1.Escrever nova mensagem\n");
-	printf("2.Consultar lista de topicos\n");
-	printf("3.Consultar lista de titulos de um topico\n");
-	printf("4.Consultar uma mensagem de um topico\n");
-	printf("5.Subscrever/Cancelar subscricao de um topico\n");
-	printf("6.Sair\n");
-	printf("Opcao: ");
+	int i=0;
+	mvprintw(i++,0,"1.Escrever nova mensagem");
+	mvprintw(i++,0,"2.Consultar lista de topicos");
+	mvprintw(i++,0,"3.Consultar lista de titulos de um topico");
+	mvprintw(i++,0,"4.Consultar uma mensagem de um topico");
+	mvprintw(i++,0,"5.Subscrever/Cancelar subscricao de um topico");
+	mvprintw(i++,0,"6.Sair");
+	mvprintw(i++,0,"Opcao: ");
+	refresh();
 	return ;
 }
 
@@ -62,13 +80,17 @@ void adicionaMensagem(Msg mensagens[], Msg msg){
 }
 
 void listaTopicos(){
+	int i=MEIO;
     if(ntopicos==0){
-	printf("Nao ha topicos!\n");
+	mvprintw(i++,0,"Nao ha topicos!");
+	refresh();
 	return ;
     }
-    printf("Topicos: \n");
-    for(int i=0; i<ntopicos; i++)
-	printf("-%s\n", topicos[i].nome);
+    mvprintw(i++,0,"Topicos:");
+    for(int i=0; i<ntopicos; i++){
+	mvprintw(i++,0,"-%s", topicos[i].nome);
+	refresh();
+    }
     return ;
 }
 
@@ -80,51 +102,49 @@ void apagaTopicos(){
 }
 
 void titulosTopico(Msg mensagens[], char topico[]){
-    int EXISTE=0;
+    int EXISTE=0, s=MEIO;
     for(int i=0; i<totalMensagens; i++){
 	if(strcmp(mensagens[i].topico,topico)==0){
-	    printf("   Mensagem %d - Titulo: %s\n\n", i+1, mensagens[i].titulo);
+	    mvprintw(s++,0,"   Mensagem %d - Titulo: %s", i+1, mensagens[i].titulo);
+	    refresh();
 	    EXISTE=1;
 	}
     }
     if(!EXISTE)
-	printf("\n\nNao ha titulos deste topico!\n");
+	mvprintw(s++,0,"Nao ha titulos deste topico!");
     return ;
 }
 
 void consultarTitulos(Msg mensagens[]){
 	char topico[20];
-	printf("\nTopico>> ");
-	fgets(topico,20,stdin);
-	if(topico[strlen(topico)-1]=='\n')
-   		topico[strlen(topico)-1]='\0';
-	fflush(stdin);
+	mvprintw(9,0,"Topico>> ");
+	refresh();
+	scanw(" %s", topico);
 
 	titulosTopico(mensagens, topico);
 	return ;
 }
 
 void mensagensTopico(Msg mensagens[], char topico[]){
-    int EXISTE=0;
+    int EXISTE=0, s=MEIO;
     for(int i=0; i<totalMensagens; i++){
 	if(strcmp(mensagens[i].topico,topico)==0){
-	    printf("   Mensagem %d - Titulo: %s\n", i+1, mensagens[i].titulo);
-	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
+	    mvprintw(s++,0,"   Mensagem %d - Titulo: %s", i+1, mensagens[i].titulo);
+	    mvprintw(s++,0,"   Mensagem: %s", mensagens[i].corpo);
+	    refresh();
 	    EXISTE=1;
 	}
     }
     if(!EXISTE)
-	printf("\n\nNao ha mensagens deste topico!\n");
+	mvprintw(s++,0,"Nao ha mensagens deste topico!");
     return ;
 }
 
 void consultarMensagem(Msg mensagens[]){
 	char topico[20];
-	printf("\n\nTopico>> ");
-	fgets(topico,20,stdin);
-	if(topico[strlen(topico)-1]=='\n')
-   		topico[strlen(topico)-1]='\0';
-	fflush(stdin);
+	mvprintw(9,0,"Topico>> ");
+	refresh();
+	scanw(" %s", topico);
 
 	mensagensTopico(mensagens, topico);
 	return ;
@@ -141,7 +161,8 @@ void subscreverTopico(char topico[]){
 	int i, EXISTE=0;	
 
 	if(subscreveEsteTopico(topico)){
-		printf("\nJa subscreve este topico\n");
+		mvprintw(MEIO+1,0,"Ja subscreve este topico!");
+		refresh();
 		return ;
 	}
 	for(i=0; i<ntopicos; i++)
@@ -150,16 +171,18 @@ void subscreverTopico(char topico[]){
 	if(EXISTE){
 		for(i=0; i<nmaxmsg && strcmp(cli.subscricoes[i].nome," ")!=0; i++);
 		strcpy(cli.subscricoes[i].nome,topico);	
-		printf("\nSubscricao do topico '%s'\n", topico);
+		mvprintw(MEIO+1,0,"Subscricao do topico '%s'", topico);
 	}
 	else
-		printf("\nEste topico nao existe!\n\n");
+		mvprintw(MEIO+1,0,"Este topico nao existe!");
+	refresh();
 	return ;
 }
 
 void cancelarTopico(char topico[]){
 	if(!subscreveEsteTopico(topico)){
-		printf("\nNao subscreve este topico\n");
+		mvprintw(MEIO+1,0,"Nao subscreve este topico!");
+		refresh();
 		return ;
 	}
 
@@ -170,47 +193,51 @@ void cancelarTopico(char topico[]){
 			strcpy(cli.subscricoes[nmaxmsg-1].nome, " ");
 		}	
 	}
-	printf("\nCancelada subscricao do topico '%s'\n", topico);
-	
+	mvprintw(MEIO+1,0,"Cancelada subscricao do topico '%s'", topico);
+	refresh();
 	return ;
 }
 
 void verificaTopicos(){
-	int i, j;
+	int i, j, s=MEIO;
 	for(i=0; strcmp(cli.subscricoes[i].nome," ")!=0; i++){
 		int EXISTE=0;
 		for(j=0; j<ntopicos && EXISTE==0; j++)
 			if(strcmp(topicos[j].nome,cli.subscricoes[i].nome)==0)
 				EXISTE=1;
 		if(EXISTE==0){
-			printf("\nCancelada subscricao a topico '%s'\n", cli.subscricoes[i].nome);
+			mvprintw(s++,0,"Cancelada subscricao a topico '%s'", cli.subscricoes[i].nome);
+			refresh();			
 			cancelarTopico(cli.subscricoes[i].nome);
 		}
+
 	}
 	return ;
 }
 
 void subscreverOuCancelar(){
-	int op;
+	int op, i=0;
 	do{
-		printf("\n\n1.Subscrever topico novo\n");
-		printf("2.Cancelar subscricao de topico\n");
-		printf("3.Voltar\n");		
-		printf("Opcao: ");
-		op=scanfInteiro();
+		limpaFirst();
+		mvprintw(i++,0,"1.Subscrever topico novo");
+		mvprintw(i++,0,"2.Cancelar subscricao de topico");
+		mvprintw(i++,0,"3.Voltar");		
+		mvprintw(i++,0,"Opcao: ");
+		refresh();
+		scanw(" %d", &op);
 	}while(op<1 || op>3);
+	i++;
 	if(op==1){//SUBSCREVER TOPICO
 		char topico[20];
-		printf("\n\nTopico>> ");
-		scanf(" %s", topico);
-		fflush(stdin);
+		mvprintw(i++,0,"Topico>> ");
+		refresh();
+		scanw(" %s", topico);
 		subscreverTopico(topico); 	
 	}
 	else if(op==2){//CANCELAR SUBSCRICAO
 		char topico[20];
-		printf("\n\nTopico>> ");
-		scanf(" %s", topico);
-		fflush(stdin);
+		mvprintw(i++,0,"Topico>> ");
+		scanw(" %s", topico);
 		cancelarTopico(topico); 	
 	}
 	return ;
@@ -222,7 +249,8 @@ char fifo_name[20];
 void sair(int n){
     int fd,res;
     Login c;
-	printf("\n\n[CLIENTE VAI DESLIGAR]\n\n");
+    mvprintw(MEIO+1,0,"[CLIENTE VAI DESLIGAR]");
+    refresh();
     c.remetente = getpid();
     c.acesso = 0;
     fd = open(FIFO_SERV,O_WRONLY);
@@ -230,6 +258,9 @@ void sair(int n){
     close(fd);
     close(fd_cli);
     unlink(fifo_name);
+
+    clear();
+    endwin();
     exit(EXIT_FAILURE);
 }
 
@@ -252,16 +283,16 @@ int main(int argc, char *argv[]){
 
 	if(argc!=2){
 		return 0;
-		printf("[ERRO] Falta o nome de utilizador!\n");
+		perror("\n[ERRO] Falta o nome de utilizador!\n");
 	}
 	if(access(FIFO_SERV, F_OK)!=0) {
-        	printf("[ERRO] Nao ha nenhum servidor!\n");
+        	perror("\n[ERRO] Nao ha nenhum servidor!\n");
         	return EXIT_FAILURE;
 	}
 	sprintf(fifo_name, FIFO_CLI, getpid());
 	
 	if(access(fifo_name, F_OK)==0) {
-       		fprintf(stderr, "[ERRO] Cli ja existe.\n");
+       		perror("\n[ERRO] Cli ja existe.\n");
          	return EXIT_FAILURE;
 	 }
 	if(mkfifo(fifo_name, 0600) == -1){
@@ -290,17 +321,24 @@ int main(int argc, char *argv[]){
 	for(int i =0;i<totalMensagens;i++){			//AQUI
 		res = read(fd_cli,&mensagens[i],sizeof(Msg));
 	}
-  	
-        printf("\n\nUtilizador: %s\n\n", cli.nome);
-
+	
 	cli.primeiro=0;
 
+	initscr();		//NCURSES
+	clear();
+	int s=0;
+	mvprintw(s++,0,"Utilizador: %s", cli.nome);
+	refresh();
+	sleep(3);
+
 	do{
+		limpaSec();
 		op=0;
 		do{		
+			limpaFirst();
 			menu();
 			alarm(10);
-			op=scanfInteiro();
+			scanw(" %d", &op);
 			alarm(0);
 		}while(op<1 || op>6);
 		if(SIGALRM==0)
@@ -315,8 +353,9 @@ int main(int argc, char *argv[]){
 			for(int i =num;i<totalMensagens;i++){
 				read(fd_cli,&mensagens[i],sizeof(Msg));
 				if(subscreveEsteTopico(mensagens[i].topico))	//NAO ENTR
-					printf("\nNova mensagem %s do topico %s disponivel durante %d!\n\n", 
+					mvprintw(MEIO-1,0,"Nova mensagem %s do topico %s disponivel durante %d!", 
 					mensagens[i].titulo, mensagens[i].topico, mensagens[i].duracao);
+					refresh();
 			}
 			apagaTopicos();			
 			read(fd_cli,&ntopicos,sizeof(int));
@@ -329,43 +368,40 @@ int main(int argc, char *argv[]){
 		}
 
 		if(op==1){//ESCREVER MENSAGEM
+			int i=MEIO;
 			Msg nova;
 		    	nova.remetente = getpid();
 			nova.resposta=0;
-			printf("\n\nTopico>> ");
-			fgets(nova.topico,TAM,stdin);
-			if(nova.topico[strlen(nova.topico)-1]=='\n')
-				nova.topico[strlen(nova.topico)-1]='\0';
-			fflush(stdin);
+			mvprintw(i++,0,"Topico>> ");
+			refresh();
+			scanw(" %s", nova.topico);
 	
-			printf("\nTitulo>> ");
-			fgets(nova.titulo,TAM,stdin);
-			if(nova.titulo[strlen(nova.titulo)-1]=='\n')
-				nova.titulo[strlen(nova.titulo)-1]='\0';
-			fflush(stdin);
+			mvprintw(i++,0,"Titulo>> ");
+			refresh();
+			scanw(" %s", nova.titulo);
 
-			printf("\nDuracao>> ");	
+			mvprintw(i++,0,"Duracao>> ");	
+			refresh();
+			//scanw(" %d", nova.duracao);
 			nova.duracao=scanfInteiro();
+			mvprintw(i-1,10,"%d         ", nova.duracao);
 		
-			printf("\nCorpo>> ");
-			fgets(nova.corpo,MAXCHAR,stdin);
-			if(nova.corpo[strlen(nova.corpo)-1]=='\n')
-				nova.corpo[strlen(nova.corpo)-1]='\0';
-			fflush(stdin);
+			mvprintw(i++,0,"Corpo>> ");
+			refresh();
+			scanw(" %s", nova.corpo);
 			write(fd_ser,&cli,sizeof(Login));
 			write(fd_ser, &nova, sizeof(Msg));
 	
 			read(fd_cli, &nova, sizeof(Msg));
-			fflush(stdout);	
 			
 			if(nova.resposta==0)
-				printf("\n\nMensagem nao foi guardada!\n");
+				mvprintw(i++,0,"Mensagem nao foi guardada!");
 			else{
 				totalMensagens++;
 				adicionaMensagem(mensagens, nova);
-				printf("\n\nMensagem %d guardada!\n", nova.resposta);
-
-			}	
+				mvprintw(i++,0,"Mensagem %d guardada!", nova.resposta);
+			}
+			refresh();	
 		}
 		else if(op==2){//CONSULTAR TOPICOS
 			listaTopicos(); 
@@ -379,7 +415,7 @@ int main(int argc, char *argv[]){
 		else if(op==5){//SUBSCREVER/CANCELAR SUBSCRICAO DE TOPICO
 			subscreverOuCancelar(); 
 		}
-		fflush(stdout);
+		sleep(3);
 	}while(op!=6);
 
 	cli.acesso=0;
@@ -389,6 +425,9 @@ int main(int argc, char *argv[]){
 	close(fd_cli);
 	close(fd_ser);
 	unlink(fifo_name);
+
+	clear();
+	endwin();
 
 	return EXIT_SUCCESS;
 }
