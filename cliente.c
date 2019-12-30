@@ -80,15 +80,15 @@ void adicionaMensagem(Msg mensagens[], Msg msg){
 }
 
 void listaTopicos(){
-	int i=MEIO;
+	int j=MEIO;
     if(ntopicos==0){
-	mvprintw(i++,0,"Nao ha topicos!");
+	mvprintw(j++,0,"Nao ha topicos!");
 	refresh();
 	return ;
     }
-    mvprintw(i++,0,"Topicos:");
+    mvprintw(j++,0,"Topicos:");
     for(int i=0; i<ntopicos; i++){
-	mvprintw(i++,0,"-%s", topicos[i].nome);
+	mvprintw(j++,0,"-%s", topicos[i].nome);
 	refresh();
     }
     return ;

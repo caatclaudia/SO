@@ -36,24 +36,50 @@ void settings(){
     return ;
 }
 
-void chamaVerificador(char *frase){
-	int p[2], estado, num;
-	printf("\n\n%s\n\n", frase);
+int p[2], r[2];
+int filho;
+
+void iniciaVerificador(){
+	int estado, num;
 
 	pipe(p);
-	int res=fork();
-	if(res==0){
+	pipe(r);
+	filho=fork();
+	if(filho==0){
 		close(0);//FECHAR ACESSO AO TECLADO
 		dup(p[0]);//DUPLICAR P[0] NA PRIMEIRA POSICAO DISPONIVEL
 		close(p[0]);//FECHAR EXTREMIDADE DE LEITURA DO PIPE
 		close(p[1]);//FECHAR EXTREMIDADE DE ESCRITA DO PIPE
+
+		close(1);//FECHAR ACESSO AO MONITOR
+		dup(r[1]);//DUPLICAR P[1] NA PRIMEIRA POSICAO DISPONIVEL
+		close(r[0]);//FECHAR EXTREMIDADE DE LEITURA DO PIPE
+		close(r[1]);//FECHAR EXTREMIDADE DE ESCRITA DO PIPE
 		execl("verificador","verificador",WORDSNOT,NULL);
 	}
 	close(p[0]);
+	close(r[1]);
+}
+
+void terminaVerificador(){
+	close(r[0]);
+	kill(filho,SIGUSR2);
+}
+
+int chamaVerificador(char frase[]){
+	int bytes=0, pal=0;
+	char resp[5];
+
 	write(p[1], frase, strlen(frase));
 	write(p[1], "\n", 1);
-	close(p[1]);
-	wait(&estado);
+	write(p[1], "##MSGEND##", strlen("##MSGEND##"));
+	write(p[1], "\n", 1);
+	bytes=read(r[0], resp, strlen(resp));
+	resp[bytes]='\0';
+	sscanf(resp, "%d", &pal);
+	printf("\nFrase com %d palavras proibidas!\n", pal);
+
+	return pal;
 }
 
 int adicionacliente(Login m[],int *n,Login c){
@@ -231,6 +257,7 @@ int main(int argc, char *argv[]){
 
     settings();
     comandosmenu();
+	iniciaVerificador();
 	
     do{
 	fflush(stdout);
@@ -238,7 +265,7 @@ int main(int argc, char *argv[]){
 	fflush(stdout);
 
 	FD_ZERO(&fontes);
-        //FD_SET(0, &fontes);
+        FD_SET(0, &fontes);
         FD_SET(fd_ser, &fontes);
 	FD_SET(fd_atu, &fontes);
 	t.tv_sec=20;
@@ -296,11 +323,14 @@ int main(int argc, char *argv[]){
 
 			if(s.nmensagens < nmaxmsg){
 				//VERIFICA AS PALAVRAS MAS
-				if(FLAG_FILTER==1)			
-					chamaVerificador(msg.corpo);
-	               	        s.nmensagens++;
-				msg.resposta=s.nmensagens;
-				adicionaMensagem(mensagens, msg);
+				int pal=0;
+				if(FLAG_FILTER==1)
+					 pal=chamaVerificador(msg.corpo);			
+				if(pal<=2){
+	               	        	s.nmensagens++;
+					msg.resposta=s.nmensagens;
+					adicionaMensagem(mensagens, msg);
+				}
        	        	}
 			write(fd_cli, &msg, sizeof(Msg));
 			close(fd_cli);
@@ -321,7 +351,7 @@ int main(int argc, char *argv[]){
 	        {
 	        	res = write(fd_cli,&topicos[i],sizeof(Topic));
 	        }
-		fprintf(stderr,"\nAtualizacao feita no cliente %d\n\n", cli.remetente);
+		fprintf(stderr,"\n[Atualizacao feita no cliente %d]\n\n", cli.remetente);
 		close(fd_cli);
 	}
     	else if(res>0 && FD_ISSET(0, &fontes)){		//TECLADO
@@ -398,7 +428,7 @@ int main(int argc, char *argv[]){
 			comandosmenu();
 		else if(strcmp(comando,"mensagem")==0 && comandoAux!=NULL){//Enviar mensagem ao verificador
 			printf("Mensagem: %s\n", comandoAux[1]);
-			chamaVerificador(comandoAux[1]);
+			chamaVerificador(comandoAux[1]);	//NAO ESTA A DAR CERTO
 		}
 		else{
 			printf("\n[ERRO] Comando invalido!\n");
@@ -409,6 +439,7 @@ int main(int argc, char *argv[]){
 		FLAG_SHUTDOWN=1;
 	}
     }while (FLAG_SHUTDOWN != 1);
+	terminaVerificador();
 
     remove(FIFO_SERV);
     close(fd_ser);
