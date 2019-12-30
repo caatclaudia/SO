@@ -5,7 +5,7 @@
 #include<sys/wait.h>
 #include<sys/stat.h>
 #include<signal.h>
-#include<curses.h>
+#include<ncurses.h>
 #include "header.h"
 
 #define MEIO 10
@@ -119,7 +119,7 @@ void consultarTitulos(Msg mensagens[]){
 	char topico[20];
 	mvprintw(9,0,"Topico>> ");
 	refresh();
-	scanw(" %s", topico);
+	getstr(topico);
 
 	titulosTopico(mensagens, topico);
 	return ;
@@ -144,7 +144,7 @@ void consultarMensagem(Msg mensagens[]){
 	char topico[20];
 	mvprintw(9,0,"Topico>> ");
 	refresh();
-	scanw(" %s", topico);
+	getstr(topico);
 
 	mensagensTopico(mensagens, topico);
 	return ;
@@ -231,13 +231,13 @@ void subscreverOuCancelar(){
 		char topico[20];
 		mvprintw(i++,0,"Topico>> ");
 		refresh();
-		scanw(" %s", topico);
+		getstr(topico);
 		subscreverTopico(topico); 	
 	}
 	else if(op==2){//CANCELAR SUBSCRICAO
 		char topico[20];
 		mvprintw(i++,0,"Topico>> ");
-		scanw(" %s", topico);
+		getstr(topico);
 		cancelarTopico(topico); 	
 	}
 	return ;
@@ -282,25 +282,25 @@ int main(int argc, char *argv[]){
 	iniciaMensagens(mensagens);
 
 	if(argc!=2){
-		return 0;
-		perror("\n[ERRO] Falta o nome de utilizador!\n");
+		printf("\n[ERRO] Falta o nome de utilizador!\n");
+		exit(EXIT_FAILURE);
 	}
 	if(access(FIFO_SERV, F_OK)!=0) {
-        	perror("\n[ERRO] Nao ha nenhum servidor!\n");
-        	return EXIT_FAILURE;
+        	printf("\n[ERRO] Nao ha nenhum servidor!\n");
+        	exit(EXIT_FAILURE);
 	}
 	sprintf(fifo_name, FIFO_CLI, getpid());
 	
 	if(access(fifo_name, F_OK)==0) {
-       		perror("\n[ERRO] Cli ja existe.\n");
-         	return EXIT_FAILURE;
+       		printf("\n[ERRO] Cli ja existe.\n");
+         	exit(EXIT_FAILURE);
 	 }
 	if(mkfifo(fifo_name, 0600) == -1){
-		perror("\n[ERRO] mkfifo do FIFO do cliente deu erro");
+		printf("\n[ERRO] mkfifo do FIFO do cliente deu erro");
 		exit(EXIT_FAILURE);
 	}
 	if(signal(SIGINT,trataSig) == SIG_ERR){
-	  perror("\n[ERRO] Não foi possivel configurar o sinal SIGINT\n");
+	  printf("\n[ERRO] Não foi possivel configurar o sinal SIGINT\n");
 	  exit(EXIT_FAILURE);
 	}
 
@@ -374,21 +374,22 @@ int main(int argc, char *argv[]){
 			nova.resposta=0;
 			mvprintw(i++,0,"Topico>> ");
 			refresh();
-			scanw(" %s", nova.topico);
+			getstr(nova.topico);
 	
 			mvprintw(i++,0,"Titulo>> ");
 			refresh();
-			scanw(" %s", nova.titulo);
+			getstr(nova.titulo);
 
 			mvprintw(i++,0,"Duracao>> ");	
 			refresh();
-			//scanw(" %d", nova.duracao);
 			nova.duracao=scanfInteiro();
 			mvprintw(i-1,10,"%d         ", nova.duracao);
 		
 			mvprintw(i++,0,"Corpo>> ");
 			refresh();
-			scanw(" %s", nova.corpo);
+			getstr(nova.corpo);			
+
+			//scanw(" %s", nova.corpo);
 			write(fd_ser,&cli,sizeof(Login));
 			write(fd_ser, &nova, sizeof(Msg));
 	
