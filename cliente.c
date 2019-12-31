@@ -88,6 +88,10 @@ void listaTopicos(){
     }
     mvprintw(j++,0,"Topicos:");
     for(int i=0; i<ntopicos; i++){
+	if(j==FIM){
+		sleep(2);
+		j=MEIO;
+	}	
 	mvprintw(j++,0,"-%s", topicos[i].nome);
 	refresh();
     }
@@ -105,6 +109,10 @@ void titulosTopico(Msg mensagens[], char topico[]){
     int EXISTE=0, s=MEIO;
     for(int i=0; i<totalMensagens; i++){
 	if(strcmp(mensagens[i].topico,topico)==0){
+	    if(s==FIM){
+		sleep(2);
+		s=MEIO;
+	    }
 	    mvprintw(s++,0,"   Mensagem %d - Titulo: %s", i+1, mensagens[i].titulo);
 	    refresh();
 	    EXISTE=1;
@@ -129,6 +137,10 @@ void mensagensTopico(Msg mensagens[], char topico[]){
     int EXISTE=0, s=MEIO;
     for(int i=0; i<totalMensagens; i++){
 	if(strcmp(mensagens[i].topico,topico)==0){
+	    if(s==FIM){
+		sleep(2);
+		s=MEIO;
+	    }
 	    mvprintw(s++,0,"   Mensagem %d - Titulo: %s", i+1, mensagens[i].titulo);
 	    mvprintw(s++,0,"   Mensagem: %s", mensagens[i].corpo);
 	    refresh();
@@ -206,6 +218,10 @@ void verificaTopicos(){
 			if(strcmp(topicos[j].nome,cli.subscricoes[i].nome)==0)
 				EXISTE=1;
 		if(EXISTE==0){
+			if(s==FIM){
+				sleep(2);
+				s=MEIO;
+			}
 			mvprintw(s++,0,"Cancelada subscricao a topico '%s'", cli.subscricoes[i].nome);
 			refresh();			
 			cancelarTopico(cli.subscricoes[i].nome);
