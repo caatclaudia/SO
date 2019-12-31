@@ -469,6 +469,16 @@ int main(int argc, char *argv[]){
 				}
 				refresh();
 			}while(ch!=TECLA_ENTER);
+			int fim=MAXCHAR, AINDATEMTEXTO=0;
+			for(int a=0; a<MAXCHAR; a++){
+				if(nova.corpo[a]==' ' && AINDATEMTEXTO==1){
+					fim=a;
+					AINDATEMTEXTO=0;
+				}
+				else if(nova.corpo[a]!=' ')
+					AINDATEMTEXTO=1;
+			}
+			nova.corpo[fim-1]='\0';
 
 			mvprintw(FIM, 0, "%s", nova.corpo); 
 			//ADICIONA O NOME DO TOPICO NS PORQUE		
