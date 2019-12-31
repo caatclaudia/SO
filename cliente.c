@@ -11,6 +11,12 @@
 #define MEIO 10
 #define FIM 20
 
+#define TECLA_SETA_UP 3
+#define TECLA_SETA_DOWN 2
+#define TECLA_SETA_LEFT 4
+#define TECLA_SETA_RIGHT 5
+#define TECLA_ENTER 10
+
 Login cli;
 Topic topicos[50];
 int ntopicos;
@@ -26,7 +32,7 @@ int scanfInteiro(){
 }
 
 void limpaFirst(){
-	for(int i=0; i<MEIO; i++){
+	for(int i=1; i<MEIO; i++){
 		mvprintw(i,0, "                                                ");
 		refresh();
 	}
@@ -40,7 +46,7 @@ void limpaSec(){
 }
 
 void menu(){
-	int i=0;
+	int i=1;
 	mvprintw(i++,0,"1.Escrever nova mensagem");
 	mvprintw(i++,0,"2.Consultar lista de topicos");
 	mvprintw(i++,0,"3.Consultar lista de titulos de um topico");
@@ -125,7 +131,7 @@ void titulosTopico(Msg mensagens[], char topico[]){
 
 void consultarTitulos(Msg mensagens[]){
 	char topico[20];
-	mvprintw(9,0,"Topico>> ");
+	mvprintw(11,0,"Topico>> ");
 	refresh();
 	getstr(topico);
 
@@ -154,7 +160,7 @@ void mensagensTopico(Msg mensagens[], char topico[]){
 
 void consultarMensagem(Msg mensagens[]){
 	char topico[20];
-	mvprintw(9,0,"Topico>> ");
+	mvprintw(11,0,"Topico>> ");
 	refresh();
 	getstr(topico);
 
@@ -232,7 +238,7 @@ void verificaTopicos(){
 }
 
 void subscreverOuCancelar(){
-	int op, i=0;
+	int op, i=1;
 	do{
 		limpaFirst();
 		mvprintw(i++,0,"1.Subscrever topico novo");
@@ -259,14 +265,27 @@ void subscreverOuCancelar(){
 	return ;
 }
 
+int calculaIndice(int inicio, int y, int x){
+	int aux=0, ind;
+	if(y==inicio)
+		ind=x-1;
+	else{
+		aux=y-inicio;
+		ind=aux*NCOLUNAS+(x-1);
+	}
+	return ind;
+}
+
 int fd_cli;
 char fifo_name[20];
 
 void sair(int n){
     int fd,res;
     Login c;
+    clear();
     mvprintw(MEIO+1,0,"[CLIENTE VAI DESLIGAR]");
     refresh();
+    sleep(1);
     c.remetente = getpid();
     c.acesso = 0;
     fd = open(FIFO_SERV,O_WRONLY);
@@ -342,10 +361,12 @@ int main(int argc, char *argv[]){
 
 	initscr();		//NCURSES
 	clear();
+	keypad(stdscr, TRUE);
+	int x, y;
+	char ch;
 	int s=0;
-	mvprintw(s++,0,"Utilizador: %s", cli.nome);
+	mvprintw(s++,0,"Utilizador %s", cli.nome);
 	refresh();
-	sleep(3);
 
 	do{
 		limpaSec();
@@ -384,10 +405,14 @@ int main(int argc, char *argv[]){
 		}
 
 		if(op==1){//ESCREVER MENSAGEM
-			int i=MEIO;
+			sleep(1);
+			limpaFirst();
+			int i=s;
+			mvprintw(i++,0,"--Escrever mensagem nova--");
 			Msg nova;
 		    	nova.remetente = getpid();
 			nova.resposta=0;
+			i++;
 			mvprintw(i++,0,"Topico>> ");
 			refresh();
 			getstr(nova.topico);
@@ -403,20 +428,62 @@ int main(int argc, char *argv[]){
 		
 			mvprintw(i++,0,"Corpo>> ");
 			refresh();
-			getstr(nova.corpo);			
+			y=i;
+			x=1;
+			move(y,x);
+			refresh();
+			
+			for(int a=0; a<MAXCHAR; a++)
+				nova.corpo[a]=' ';
+			do{
+				ch = getch();
+				if(ch==TECLA_SETA_UP && y>i){
+					y--;
+					move(y,x);
+					refresh();
+				}
+				else if(ch==TECLA_SETA_DOWN && y<i+NLINHAS){
+					y++;
+					move(y,x);
+					refresh();
+				}
+				else if(ch==TECLA_SETA_LEFT && x>2){
+					x--;
+					move(y,x);
+					refresh();
+				}
+				else if(ch==TECLA_SETA_RIGHT && x<NCOLUNAS){
+					int PODE=1;
+					if(y==(i+NLINHAS) && x>=NULTIMCOLUNAS)
+						PODE=0;
+					if(PODE){
+						x++;
+						move(y,x);
+						refresh();
+					}
+				}
+				else{
+					int ind=calculaIndice(i, y, x);
+					nova.corpo[ind]=ch;
+					mvprintw(y, x++, "%c", ch);
+				}
+				refresh();
+			}while(ch!=TECLA_ENTER);
 
-			//scanw(" %s", nova.corpo);
+			mvprintw(FIM, 0, "%s", nova.corpo); 
+			//ADICIONA O NOME DO TOPICO NS PORQUE		
+
 			write(fd_ser,&cli,sizeof(Login));
 			write(fd_ser, &nova, sizeof(Msg));
 	
 			read(fd_cli, &nova, sizeof(Msg));
 			
 			if(nova.resposta==0)
-				mvprintw(i++,0,"Mensagem nao foi guardada!");
+				mvprintw(FIM+1,0,"Mensagem nao foi guardada!");
 			else{
 				totalMensagens++;
 				adicionaMensagem(mensagens, nova);
-				mvprintw(i++,0,"Mensagem %d guardada!", nova.resposta);
+				mvprintw(FIM+1,0,"Mensagem %d guardada!", nova.resposta);
 			}
 			refresh();	
 		}
