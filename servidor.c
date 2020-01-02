@@ -199,19 +199,26 @@ void listaTopicos(){
 
 void apagarTopicosSemMensagens(Msg mensagens[]){
 	int EXISTE=0;
+	int apaga[s.ntopicos], apagaN=0;
 	for(int i=0; i<s.ntopicos; i++){
+		apaga[i]=-1;
 		EXISTE=0;
 		for(int j=0; j<s.nmensagens && EXISTE==0; j++){
 			if(strcmp(mensagens[j].topico,topicos[i].nome)==0)
 				EXISTE=1;	
 		}
 		if(!EXISTE){
-			fprintf(stderr,"Apagado topico '%s' !\n", topicos[i]);
-			for(int j=i; j<s.ntopicos-1; j++)
-				topicos[j]=topicos[j+1];
-			strcpy(topicos[s.ntopicos-1].nome," ");
-			s.ntopicos--;
+			apaga[apagaN]=i;
+			apagaN++;
 		}
+	}
+	for(int i=apagaN-1; i>=0; i--){
+		int ind=apaga[i];
+		fprintf(stderr,"Apagado topico '%s' !\n", topicos[ind].nome);
+		for(int j=ind; j<s.ntopicos-1; j++)
+			topicos[j]=topicos[j+1];
+		strcpy(topicos[s.ntopicos-1].nome," ");
+		s.ntopicos--;
 	}
 	return ;
 }
