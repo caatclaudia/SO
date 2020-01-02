@@ -113,7 +113,7 @@ void apagaTopicos(){
 }
 
 void titulosTopico(Msg mensagens[], char topico[]){
-    int EXISTE=0, s=MEIO;
+    int EXISTE=0, s=MEIO+1;
     for(int i=0; i<totalMensagens; i++){
 	if(strcmp(mensagens[i].topico,topico)==0){
 	    if(s==FIM){
@@ -127,12 +127,13 @@ void titulosTopico(Msg mensagens[], char topico[]){
     }
     if(!EXISTE)
 	mvprintw(s++,0,"Nao ha titulos deste topico!");
+    refresh();
     return ;
 }
 
 void consultarTitulos(Msg mensagens[]){
 	char topico[20];
-	mvprintw(11,0,"Topico>> ");
+	mvprintw(MEIO+1,0,"Topico>> ");
 	refresh();
 	getstr(topico);
 
@@ -141,7 +142,7 @@ void consultarTitulos(Msg mensagens[]){
 }
 
 void mensagensTopico(Msg mensagens[], char topico[]){
-    int EXISTE=0, s=MEIO;
+    int EXISTE=0, s=MEIO+1;
     for(int i=0; i<totalMensagens; i++){
 	if(strcmp(mensagens[i].topico,topico)==0){
 	    if(s==FIM){
@@ -156,12 +157,13 @@ void mensagensTopico(Msg mensagens[], char topico[]){
     }
     if(!EXISTE)
 	mvprintw(s++,0,"Nao ha mensagens deste topico!");
+    refresh();
     return ;
 }
 
 void consultarMensagem(Msg mensagens[]){
 	char topico[20];
-	mvprintw(11,0,"Topico>> ");
+	mvprintw(MEIO+1,0,"Topico>> ");
 	refresh();
 	getstr(topico);
 
@@ -385,10 +387,9 @@ int main(int argc, char *argv[]){
 		if(op>=2 && op<=4){
 		        fd_atu = open(FIFO_ATU, O_WRONLY);
 			write(fd_atu,&cli,sizeof(Login));
-			write(fd_atu,&totalMensagens,sizeof(int));
-			int num=totalMensagens;
+			iniciaMensagens(mensagens);
 			read(fd_cli,&totalMensagens,sizeof(int));
-			for(int i =num;i<totalMensagens;i++){
+			for(int i =0;i<totalMensagens;i++){
 				read(fd_cli,&mensagens[i],sizeof(Msg));
 				if(subscreveEsteTopico(mensagens[i].topico))	//NAO ENTR
 					mvprintw(MEIO-1,0,"Nova mensagem %s do topico %s disponivel durante %d!", 
@@ -482,8 +483,7 @@ int main(int argc, char *argv[]){
 			}
 			nova.corpo[fim-1]='\0';
 
-			mvprintw(FIM, 0, "%s", nova.corpo); 
-			//ADICIONA O NOME DO TOPICO NS PORQUE		
+			mvprintw(FIM, 0, "%s", nova.corpo); 	
 
 			write(fd_ser,&cli,sizeof(Login));
 			write(fd_ser, &nova, sizeof(Msg));

@@ -359,7 +359,7 @@ int main(int argc, char *argv[]){
 			res = write(fd_cli,&cli,sizeof(Login));
 			
 			write(fd_cli,&s.nmensagensreais,sizeof(int));
-			for(int i=0;i<s.nmensagensreais;i++)	//AQUI
+			for(int i=0;i<s.nmensagensreais;i++)
 	                  {
 	                      res = write(fd_cli,&mensagens[i],sizeof(Msg));
 	                  }
@@ -402,9 +402,8 @@ int main(int argc, char *argv[]){
 		read(fd_atu,&cli,sizeof(Login));
 		sprintf(fifo_name, FIFO_CLI, cli.remetente);
 		fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
-		read(fd_atu,&n,sizeof(int));
 		write(fd_cli,&s.nmensagensreais,sizeof(int));
-		for(int i=n;i<s.nmensagensreais;i++)	//AQUI
+		for(int i=0;i<s.nmensagensreais;i++)	//AQUI
 	        {
 	        	res = write(fd_cli,&mensagens[i],sizeof(Msg));
 	        }
