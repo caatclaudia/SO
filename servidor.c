@@ -80,7 +80,7 @@ int chamaVerificador(char frase[]){
 	bytes=read(r[0], resp, strlen(resp));
 	resp[bytes]='\0';
 	sscanf(resp, "%d", &pal);
-	printf("\nFrase com %d palavras proibidas!\n", pal);
+	printf("\n[Frase com %d palavras proibidas!]\n", pal);
 
 	return pal;
 }
@@ -138,7 +138,7 @@ void adicionaTopico(char topico[]){
 			return ;
 	s.ntopicos++;
 	strcpy(topicos[s.ntopicos-1].nome,topico);
-	fprintf(stderr,"Topico '%s' adicionado!\n", topico);
+	fprintf(stderr,"[Topico '%s' adicionado!]\n", topico);
 	return ;
 }
 
@@ -234,7 +234,7 @@ int apagarTopicosSemMensagens(Msg mensagens[]){
 	}
 	for(int i=apagaN-1; i>=0; i--){
 		int ind=apaga[i];
-		fprintf(stderr,"Apagado topico '%s' !\n", topicos[ind].nome);
+		fprintf(stderr,"[Apagado topico '%s' !]\n", topicos[ind].nome);
 		for(int j=ind; j<s.ntopicos-1; j++)
 			topicos[j]=topicos[j+1];
 		strcpy(topicos[s.ntopicos-1].nome," ");
@@ -257,7 +257,7 @@ void *func(void *dados){
 	}	
 	d->termina=1;
 	FLAG_MENSAGENSATUALIZA=1;
-	fprintf(stderr,"\nMensagem %d ja nao esta disponivel!", d->resposta);
+	fprintf(stderr,"\n[Mensagem %d ja nao esta disponivel!]", d->resposta);
 	fflush(stdout);
 	
 	pthread_exit(NULL);
@@ -367,7 +367,7 @@ int main(int argc, char *argv[]){
         	      	      		}
                    	        }
        	        	}
-		        fprintf(stderr,"\n%s iniciou sessao!\n",cli.nome);
+		        fprintf(stderr,"\n[%s iniciou sessao!]\n",cli.nome);
 			res = write(fd_cli,&cli,sizeof(Login));
 			
 			write(fd_cli,&s.nmensagensreais,sizeof(int));
@@ -392,7 +392,7 @@ int main(int argc, char *argv[]){
 			sprintf(fifo_name, FIFO_CLI, cli.remetente);
 			fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
 			read(fd_ser, &msg, sizeof(Msg));
-			fprintf(stderr,"\nInterrompido...\nRecebi '%s'\n\n", msg.corpo);
+			fprintf(stderr,"\n[Interrompido...\nRecebi '%s']\n\n", msg.corpo);
 
 			if(s.nmensagensreais < nmaxmsg){
 				//VERIFICA AS PALAVRAS MAS

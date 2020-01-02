@@ -31,15 +31,8 @@ int scanfInteiro(){
   return inteiro;
 }
 
-void limpaFirst(){
-	for(int i=1; i<MEIO; i++){
-		mvprintw(i,0, "                                                ");
-		refresh();
-	}
-}
-
-void limpaSec(){
-	for(int i=MEIO; i<FIM; i++){
+void limpa(){
+	for(int i=1; i<FIM+3; i++){
 		mvprintw(i,0, "                                                ");
 		refresh();
 	}
@@ -243,7 +236,7 @@ void verificaTopicos(){
 void subscreverOuCancelar(){
 	int op, i=1;
 	do{
-		limpaFirst();
+		limpa();
 		mvprintw(i++,0,"1.Subscrever topico novo");
 		mvprintw(i++,0,"2.Cancelar subscricao de topico");
 		mvprintw(i++,0,"3.Voltar");		
@@ -383,10 +376,10 @@ int main(int argc, char *argv[]){
 	FLAG_ATUALIZA=1;
 
 	do{
-		limpaSec();
+		limpa();
 		op=0;
 		do{		
-			limpaFirst();
+			limpa();
 			menu();
 			alarm(10);
 			scanw(" %d", &op);
@@ -420,13 +413,13 @@ int main(int argc, char *argv[]){
 
 		if(op==1){//ESCREVER MENSAGEM
 			sleep(1);
-			limpaFirst();
+			limpa();
 			int i=s;
 			mvprintw(i++,0,"--Escrever mensagem nova--");
 			Msg nova;
 			nova.termina=0;
 		    	nova.remetente = getpid();
-			nova.resposta=0;
+			nova.resposta=-1;
 			i++;
 			mvprintw(i++,0,"Topico>> ");
 			refresh();
@@ -493,16 +486,14 @@ int main(int argc, char *argv[]){
 				else if(nova.corpo[a]!=' ')
 					AINDATEMTEXTO=1;
 			}
-			nova.corpo[fim-1]='\0';
-
-			mvprintw(FIM, 0, "%s", nova.corpo); 	
+			nova.corpo[fim-1]='\0';	
 
 			write(fd_ser,&cli,sizeof(Login));
 			write(fd_ser, &nova, sizeof(Msg));
 	
 			read(fd_cli, &nova, sizeof(Msg));
 			
-			if(nova.resposta==0)
+			if(nova.resposta==-1)
 				mvprintw(FIM+1,0,"Mensagem nao foi guardada!");
 			else{
 				totalMensagens++;
