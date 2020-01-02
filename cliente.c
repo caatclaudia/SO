@@ -33,7 +33,7 @@ int scanfInteiro() {
 
 void limpa() {
 	for (int i = 1; i < FIM + 3; i++) {
-		mvprintw(i, 0, "                                                ");
+		mvprintw(i, 0, "                                                              ");
 		refresh();
 	}
 }
@@ -396,7 +396,7 @@ int main(int argc, char* argv[]) {
 			for (int i = 0; i < totalMensagens; i++) {
 				read(fd_cli, &mensagens[i], sizeof(Msg));
 				if (subscreveEsteTopico(mensagens[i].topico))
-					mvprintw(MEIO - 1, 0, "Nova mensagem %s do topico %s disponivel durante %d!",
+					mvprintw(MEIO - 1, 0, "Nova mensagem %s do topico %s disponivel durante %d s!",
 						mensagens[i].titulo, mensagens[i].topico, mensagens[i].duracao);
 				refresh();
 			}
