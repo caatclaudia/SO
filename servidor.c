@@ -217,7 +217,7 @@ void listaTopicos(){
     return ;
 }
 
-void apagarTopicosSemMensagens(Msg mensagens[]){
+int apagarTopicosSemMensagens(Msg mensagens[]){
 	int EXISTE=0;
 	int apaga[s.ntopicos], apagaN=0;
 	for(int i=0; i<s.ntopicos; i++){
@@ -240,7 +240,9 @@ void apagarTopicosSemMensagens(Msg mensagens[]){
 		strcpy(topicos[s.ntopicos-1].nome," ");
 		s.ntopicos--;
 	}
-	return ;
+	if(apagaN==0)
+		return 0;
+	return 1;
 }
 
 int FLAG_MENSAGENSATUALIZA;
@@ -259,6 +261,15 @@ void *func(void *dados){
 	fflush(stdout);
 	
 	pthread_exit(NULL);
+}
+
+void mandaAtualizar(int cl[]){
+	for(int i=0;i<maxusers;i++){
+		if(cl[i] != -1){
+		   kill(cl[i],SIGUSR1);
+		}
+    	}
+	return ;
 }
 
 int main(int argc, char *argv[]){   
@@ -330,6 +341,7 @@ int main(int argc, char *argv[]){
 			if(mensagens[i].termina==1)
 				pthread_join(threads[mensagens[i].resposta], &resultado);
 		}
+		mandaAtualizar(listaUsers);
 	}
 	else	{
 
@@ -392,6 +404,7 @@ int main(int argc, char *argv[]){
 					pthread_create(&threads[s.nmensagens],NULL,func,(void *) &mensagens[s.nmensagensreais]);
 				
 					adicionaMensagem(mensagens, msg);
+					mandaAtualizar(listaUsers);
 				}
        	        	}
 			write(fd_cli, &msg, sizeof(Msg));
@@ -459,9 +472,10 @@ int main(int argc, char *argv[]){
 		else if(strcmp(comando,"del")==0 && comandoAux!=NULL){//APAGAR MENSAGEM
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			int v=atoi(comandoAux[1]);
-			if(apagarMensagem(mensagens, v))
+			if(apagarMensagem(mensagens, v)){
 				printf("Mensagem apagada com sucesso!\n");
-			
+				mandaAtualizar(listaUsers);
+			}			
 		}
 		else if(strcmp(comando,"kick")==0 && comandoAux!=NULL){ //EXCLUIR USER
 			for(int i=0; i<s.ncliativos; i++){
@@ -483,7 +497,8 @@ int main(int argc, char *argv[]){
 		}
 		else if(strcmp(comando,"prune")==0 && comandoAux[1]==NULL){//APAGAR TOPICOS SEM MENSAGENS
 			printf("\nApagando topicos sem mensagens!\n");
-			apagarTopicosSemMensagens(mensagens);
+			if(apagarTopicosSemMensagens(mensagens))
+				mandaAtualizar(listaUsers);
 		}
 		else if(strcmp(comando,"help")==0 && comandoAux[1]==NULL)
 			comandosmenu();

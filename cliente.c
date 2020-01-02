@@ -306,6 +306,12 @@ void trataSig(int i){
     sair(i);
 }
 
+int FLAG_ATUALIZA;
+
+void trataSigAtu(int i){
+   FLAG_ATUALIZA=1;
+}
+
 int main(int argc, char *argv[]){
 	int ntopicos=0;
 	char nome[20], fifo_name1[20];
@@ -341,6 +347,10 @@ int main(int argc, char *argv[]){
 	  printf("\n[ERRO] Não foi possivel configurar o sinal SIGINT\n");
 	  exit(EXIT_FAILURE);
 	}
+	if(signal(SIGUSR1,trataSigAtu) == SIG_ERR){
+	  printf("\n[ERRO] Não foi possivel configurar o sinal SIGUSR1\n");
+	  exit(EXIT_FAILURE);
+	}
 
 	cli.remetente = getpid();
         cli.acesso = 1;
@@ -370,6 +380,7 @@ int main(int argc, char *argv[]){
 	int s=0;
 	mvprintw(s++,0,"Utilizador %s", cli.nome);
 	refresh();
+	FLAG_ATUALIZA=1;
 
 	do{
 		limpaSec();
@@ -384,7 +395,7 @@ int main(int argc, char *argv[]){
 		if(SIGALRM==0)
 			sair(0);
 	
-		if(op>=2 && op<=4){
+		if(FLAG_ATUALIZA){
 		        fd_atu = open(FIFO_ATU, O_WRONLY);
 			write(fd_atu,&cli,sizeof(Login));
 			iniciaMensagens(mensagens);
@@ -404,6 +415,7 @@ int main(int argc, char *argv[]){
 			}
 			close(fd_atu);
 			verificaTopicos();
+			FLAG_ATUALIZA=0;
 		}
 
 		if(op==1){//ESCREVER MENSAGEM
