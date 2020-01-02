@@ -2,12 +2,12 @@ all: cliente gestor verificador
 
 cliente:
 	gcc -c cliente.c
-	gcc header.h cliente.c -o cliente
+	gcc header.h cliente.c -o cliente -lncurses
 
 	
 gestor:
 	gcc -c servidor.c
-	gcc header.h servidor.c -o gestor
+	gcc header.h servidor.c -o gestor -lpthread
 	
 
 verificador:
