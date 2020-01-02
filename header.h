@@ -20,8 +20,8 @@ char fileWN[20]="palavras.txt";
 #define FIFO_ATU "ATU"
 
 typedef struct{		//ACRESCENTEI
-   int ativo;
    int ntopicos;
+   int nmensagensreais;
    int nmensagens;
    int ncliativos;
 }Server;

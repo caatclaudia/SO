@@ -7,6 +7,8 @@
 #include<pthread.h>
 #include"header.h"
 
+#define THREADS 15
+
 Topic topicos[50];
 Server s;
 
@@ -120,9 +122,11 @@ void iniciaMensagens(Msg mensagens[]){
 		strcpy(mensagens[i].topico," ");
 		strcpy(mensagens[i].titulo," ");
 		mensagens[i].duracao=-1;
+		mensagens[i].termina=0;
     }
     s.ntopicos=0;
     s.nmensagens=0;
+    s.nmensagensreais=0;
     for(int i=0; i<50; i++)
 		strcpy(topicos[i].nome," ");
     return ;
@@ -139,13 +143,15 @@ void adicionaTopico(char topico[]){
 }
 
 void adicionaMensagem(Msg mensagens[], Msg msg){
-	mensagens[s.nmensagens-1]=msg;
+	mensagens[s.nmensagensreais]=msg;
 	adicionaTopico(msg.topico);
+	s.nmensagensreais++;
+	s.nmensagens++;
 }
 
 void mensagensTopico(Msg mensagens[], char topico[]){
     int EXISTE=0;
-    for(int i=0; i<s.nmensagens; i++){
+    for(int i=0; i<s.nmensagensreais; i++){
 		if(strcmp(mensagens[i].topico,topico)==0){
 			printf("   Mensagem %d - Titulo: %s\n", i+1, mensagens[i].titulo);
 			printf("   Mensagem: %s\n\n", mensagens[i].corpo);
@@ -159,7 +165,7 @@ void mensagensTopico(Msg mensagens[], char topico[]){
 
 void listaMensagens(Msg mensagens[]){
     int i;
-    for(i=0; i<s.nmensagens; i++){
+    for(i=0; i<s.nmensagensreais; i++){
 	    printf("   Mensagem %d - Topico: %s\n", i+1, mensagens[i].topico);
 	    printf("   Titulo: %s\n", mensagens[i].titulo);
 	    printf("   Mensagem: %s\n\n", mensagens[i].corpo);
@@ -170,20 +176,34 @@ void listaMensagens(Msg mensagens[]){
 }
 
 int apagarMensagem(Msg mensagens[], int ind){
-    if(ind>s.nmensagens || ind<0){
+    if(ind>s.nmensagensreais || ind<0){
 		printf("Esta mensagem nao existe!\n");
 		return 0;
     }
     
-    for(int i=ind-1; i<s.nmensagens-1; i++){
+    for(int i=ind-1; i<s.nmensagensreais-1; i++){
 	    mensagens[i]=mensagens[i+1];	    
     }
-    mensagens[s.nmensagens-1].remetente=-1;
-    strcpy(mensagens[s.nmensagens-1].corpo," ");
-    strcpy(mensagens[s.nmensagens-1].topico," ");
-    strcpy(mensagens[s.nmensagens-1].titulo," ");
-    mensagens[s.nmensagens-1].duracao=-1;
+    mensagens[s.nmensagensreais-1].remetente=-1;
+    strcpy(mensagens[s.nmensagensreais-1].corpo," ");
+    strcpy(mensagens[s.nmensagensreais-1].topico," ");
+    strcpy(mensagens[s.nmensagensreais-1].titulo," ");
+    mensagens[s.nmensagensreais-1].duracao=-1;
+    mensagens[s.nmensagensreais-1].termina=0;
+    s.nmensagensreais--;
     return 1;
+}
+
+void eliminaMensagemTempo(Msg mensagens[]){
+	int apaga[s.nmensagensreais], num=0, i;
+	for(i=0; i<s.nmensagensreais; i++)
+		if(mensagens[i].termina==1){
+			apaga[num]=i;
+			num++;
+		}
+	for(i=num-1; i>=0; i--)
+		apagarMensagem(mensagens, apaga[i]);
+	return ;
 }
 
 void listaTopicos(){
@@ -203,7 +223,7 @@ void apagarTopicosSemMensagens(Msg mensagens[]){
 	for(int i=0; i<s.ntopicos; i++){
 		apaga[i]=-1;
 		EXISTE=0;
-		for(int j=0; j<s.nmensagens && EXISTE==0; j++){
+		for(int j=0; j<s.nmensagensreais && EXISTE==0; j++){
 			if(strcmp(mensagens[j].topico,topicos[i].nome)==0)
 				EXISTE=1;	
 		}
@@ -221,6 +241,24 @@ void apagarTopicosSemMensagens(Msg mensagens[]){
 		s.ntopicos--;
 	}
 	return ;
+}
+
+int FLAG_MENSAGENSATUALIZA;
+
+void *func(void *dados){
+	Msg *d;
+	d=(Msg *) dados;
+
+	while(d->duracao>0 && d->termina==0){
+		sleep(1);
+		d->duracao--;
+	}	
+	d->termina=1;
+	FLAG_MENSAGENSATUALIZA=1;
+	fprintf(stderr,"\nMensagem %d ja nao esta disponivel!", d->resposta);
+	fflush(stdout);
+	
+	pthread_exit(NULL);
 }
 
 int main(int argc, char *argv[]){   
@@ -261,8 +299,13 @@ int main(int argc, char *argv[]){
 	if(getenv("MAXUSERS") != NULL){
 		maxusers = atoi(getenv("MAXUSERS"));
 	}
-        
 
+	pthread_t *threads;
+	threads=(pthread_t *) malloc(sizeof(pthread_t)*THREADS);
+        int nThreads=0;
+	void *resultado;
+
+	FLAG_MENSAGENSATUALIZA=0;
     settings();
     comandosmenu();
 	iniciaVerificador();
@@ -279,6 +322,16 @@ int main(int argc, char *argv[]){
 	t.tv_sec=20;
 	t.tv_usec=0;
         res = select(fd_atu + 1, &fontes, NULL, NULL, &t);
+
+	if(FLAG_MENSAGENSATUALIZA){
+		eliminaMensagemTempo(mensagens);
+		FLAG_MENSAGENSATUALIZA=0;
+		for(int i=0; i<s.nmensagensreais; i++){
+			if(mensagens[i].termina==1)
+				pthread_join(threads[mensagens[i].resposta], &resultado);
+		}
+	}
+	else	{
 
 	
 	if(res>0 && FD_ISSET(fd_ser, &fontes)) {		//FIFO
@@ -305,8 +358,8 @@ int main(int argc, char *argv[]){
 		        fprintf(stderr,"\n%s iniciou sessao!\n",cli.nome);
 			res = write(fd_cli,&cli,sizeof(Login));
 			
-			write(fd_cli,&s.nmensagens,sizeof(int));
-			for(int i=0;i<s.nmensagens;i++)	//AQUI
+			write(fd_cli,&s.nmensagensreais,sizeof(int));
+			for(int i=0;i<s.nmensagensreais;i++)	//AQUI
 	                  {
 	                      res = write(fd_cli,&mensagens[i],sizeof(Msg));
 	                  }
@@ -329,14 +382,15 @@ int main(int argc, char *argv[]){
 			read(fd_ser, &msg, sizeof(Msg));
 			fprintf(stderr,"\nInterrompido...\nRecebi '%s'\n\n", msg.corpo);
 
-			if(s.nmensagens < nmaxmsg){
+			if(s.nmensagensreais < nmaxmsg){
 				//VERIFICA AS PALAVRAS MAS
 				int pal=0;
 				if(FLAG_FILTER==1)
 					 pal=chamaVerificador(msg.corpo);			
 				if(pal<=2){
-	               	        	s.nmensagens++;
 					msg.resposta=s.nmensagens;
+					pthread_create(&threads[s.nmensagens],NULL,func,(void *) &mensagens[s.nmensagensreais]);
+				
 					adicionaMensagem(mensagens, msg);
 				}
        	        	}
@@ -349,8 +403,8 @@ int main(int argc, char *argv[]){
 		sprintf(fifo_name, FIFO_CLI, cli.remetente);
 		fd_cli = open(fifo_name, O_WRONLY |O_NONBLOCK);
 		read(fd_atu,&n,sizeof(int));
-		write(fd_cli,&s.nmensagens,sizeof(int));
-		for(int i=n;i<s.nmensagens;i++)	//AQUI
+		write(fd_cli,&s.nmensagensreais,sizeof(int));
+		for(int i=n;i<s.nmensagensreais;i++)	//AQUI
 	        {
 	        	res = write(fd_cli,&mensagens[i],sizeof(Msg));
 	        }
@@ -407,7 +461,7 @@ int main(int argc, char *argv[]){
 			printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
 			int v=atoi(comandoAux[1]);
 			if(apagarMensagem(mensagens, v))
-				s.nmensagens--;
+				printf("Mensagem apagada com sucesso!\n");
 			
 		}
 		else if(strcmp(comando,"kick")==0 && comandoAux!=NULL){ //EXCLUIR USER
@@ -446,7 +500,16 @@ int main(int argc, char *argv[]){
 		fprintf(stderr,"TIMEOUT\n\n");
 		FLAG_SHUTDOWN=1;
 	}
+	}
     }while (FLAG_SHUTDOWN != 1);
+
+	for(int i=0; i<s.nmensagensreais; i++){
+		mensagens[i].termina=1;
+		pthread_join(threads[mensagens[i].resposta], &resultado);
+	}
+
+	free(threads);
+
 	terminaVerificador();
 
     remove(FIFO_SERV);

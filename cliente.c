@@ -65,6 +65,7 @@ void iniciaMensagens(Msg mensagens[]){
 	strcpy(mensagens[i].topico," ");
 	strcpy(mensagens[i].titulo," ");
 	mensagens[i].duracao=-1;
+	mensagens[i].termina=0;
     }
     ntopicos=0;
     totalMensagens=0;
@@ -410,6 +411,7 @@ int main(int argc, char *argv[]){
 			int i=s;
 			mvprintw(i++,0,"--Escrever mensagem nova--");
 			Msg nova;
+			nova.termina=0;
 		    	nova.remetente = getpid();
 			nova.resposta=0;
 			i++;
