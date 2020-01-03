@@ -155,7 +155,7 @@ void mensagensTopico(Msg mensagens[], char topico[]) {
 	int EXISTE = 0;
 	for (int i = 0; i < s.nmensagensreais; i++) {
 		if (strcmp(mensagens[i].topico, topico) == 0) {
-			printf("   Mensagem %d - Titulo: %s\n", i + 1, mensagens[i].titulo);
+			printf("   Mensagem %d - Titulo: %s\n", mensagens[i].resposta, mensagens[i].titulo);
 			printf("   Mensagem: %s\n\n", mensagens[i].corpo);
 			EXISTE = 1;
 		}
@@ -168,7 +168,7 @@ void mensagensTopico(Msg mensagens[], char topico[]) {
 void listaMensagens(Msg mensagens[]) {
 	int i;
 	for (i = 0; i < s.nmensagensreais; i++) {
-		printf("   Mensagem %d - Topico: %s\n", i + 1, mensagens[i].topico);
+		printf("   Mensagem %d - Topico: %s\n", mensagens[i].resposta, mensagens[i].topico);
 		printf("   Titulo: %s\n", mensagens[i].titulo);
 		printf("   Mensagem: %s\n\n", mensagens[i].corpo);
 	}
@@ -464,9 +464,12 @@ int main(int argc, char* argv[]) {
 				else if (strcmp(comando, "del") == 0 && comandoAux != NULL) {//APAGAR MENSAGEM
 					printf("\nIntroduziu comando %s %s\n", comando, comandoAux[1]);
 					int v = atoi(comandoAux[1]);
-					if (apagarMensagem(mensagens, v)) {
-						printf("\nMensagem apagada com sucesso!\n");
-						mandaAtualizar(listaUsers);
+					for(int i=0; i<s.nmensagensreais; i++){
+						if(v==mensagens[i].resposta){
+							apagarMensagem(mensagens, i);
+							printf("\nMensagem apagada com sucesso!\n");
+							mandaAtualizar(listaUsers);
+						}
 					}
 				}
 				else if (strcmp(comando, "kick") == 0 && comandoAux != NULL) { //EXCLUIR USER

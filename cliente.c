@@ -114,7 +114,7 @@ void titulosTopico(Msg mensagens[], char topico[]) {
 				sleep(2);
 				s = MEIO;
 			}
-			mvprintw(s++, 0, "   Mensagem %d - Titulo: %s", i + 1, mensagens[i].titulo);
+			mvprintw(s++, 0, "   Mensagem %d - Titulo: %s", mensagens[i].resposta, mensagens[i].titulo);
 			refresh();
 			EXISTE = 1;
 		}
@@ -143,7 +143,7 @@ void mensagensTopico(Msg mensagens[], char topico[]) {
 				sleep(2);
 				s = MEIO;
 			}
-			mvprintw(s++, 0, "   Mensagem %d - Titulo: %s", i + 1, mensagens[i].titulo);
+			mvprintw(s++, 0, "   Mensagem %d - Titulo: %s", mensagens[i].resposta, mensagens[i].titulo);
 			mvprintw(s++, 0, "   Mensagem: %s", mensagens[i].corpo);
 			refresh();
 			EXISTE = 1;
