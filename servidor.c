@@ -7,7 +7,7 @@
 #include<pthread.h>
 #include"header.h"
 
-#define THREADS 15
+#define THREADS nmaxmsg
 
 Topic topicos[50];
 Server s;
@@ -445,17 +445,24 @@ int main(int argc, char* argv[]) {
 						FLAG_FILTER = 0;
 				}
 				else if (strcmp(comando, "users") == 0 && comandoAux[1] == NULL) {//LISTAR USERS
-					printf("\nUtilizadores ligados:\n");
-					for (int i = 0; i < s.ncliativos; i++)
-						printf("   %s\n", clientes[i].nome);
-
+					if(s.ncliativos==0)	
+						printf("\nNenhum utilizador ligado!\n");
+					else{
+						printf("\nUtilizadores ligados:\n");
+						for (int i = 0; i < s.ncliativos; i++)
+							printf("   %s\n", clientes[i].nome);
+					}
 				}
 				else if (strcmp(comando, "topics") == 0 && comandoAux[1] == NULL) {//LISTAR TOPICOS
 					listaTopicos(mensagens);
 				}
 				else if (strcmp(comando, "msg") == 0 && comandoAux[1] == NULL) {//LISTAR MENSAGENS
-					printf("\nLista de mensagens:\n");
-					listaMensagens(mensagens);
+					if(s.nmensagensreais==0)	
+						printf("\nNenhuma mensagem disponivel!\n");
+					else{					
+						printf("\nLista de mensagens:\n");
+						listaMensagens(mensagens);
+					}
 				}
 				else if (strcmp(comando, "topic") == 0 && comandoAux[1] != NULL) {//LISTAR MENSAGENS DESTE TOPICO
 					printf("\nTopico: %s\n", comandoAux[1]);
