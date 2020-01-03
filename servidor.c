@@ -11,8 +11,9 @@
 
 Topic topicos[50];
 Server s;
+int FLAG_MENSAGENSATUALIZA;
 
-void comandosmenu() {
+void comandosMenu() {
 	printf("=========Configuracoes=========\n");
 	printf("Ver instrucoes novamente (help) \n");
 	printf("Ligar/desligar  filtragem de palavras proibidas (filter on / filter off)\n");
@@ -39,6 +40,7 @@ void settings() {
 	return;
 }
 
+//PARA VERIFICADOR
 int p[2], r[2];
 int filho;
 
@@ -85,7 +87,7 @@ int chamaVerificador(char frase[]) {
 	return pal;
 }
 
-int adicionacliente(Login m[], int* n, Login c) {
+int adicionaCliente(Login m[], int* n, Login c) {
 	int i;
 	for (i = 0; i < *n && strcmp(c.nome, m[i].nome) != 0; i++);
 	if (i == *n) {
@@ -96,7 +98,7 @@ int adicionacliente(Login m[], int* n, Login c) {
 	return 1;
 }
 
-int existecliente(Login m[], char nome[]) {
+int existeCliente(Login m[], char nome[]) {
 	int i;
 	for (i = 0; i < s.ncliativos; i++) {
 		if (strcmp(m[i].nome, nome) == 0)
@@ -105,7 +107,7 @@ int existecliente(Login m[], char nome[]) {
 	return 0;
 }
 
-void eliminacliente(Login m[], int* n, int pid) {
+void eliminaCliente(Login m[], int* n, int pid) {
 	int i;
 	for (i = 0; i < *n && m[i].remetente != pid; i++);
 	if (i != *n) {
@@ -245,8 +247,6 @@ int apagarTopicosSemMensagens(Msg mensagens[]) {
 	return 1;
 }
 
-int FLAG_MENSAGENSATUALIZA;
-
 void* func(void* dados) {
 	Msg* d;
 	d = (Msg*)dados;
@@ -304,12 +304,10 @@ int main(int argc, char* argv[]) {
 		nmaxnot = atoi(getenv("MAXNOT"));
 	if (getenv("MAXMSG") != NULL)
 		nmaxmsg = atoi(getenv("MAXMSG"));
-	if (getenv("WORDSNOT") != NULL) {
+	if (getenv("WORDSNOT") != NULL) 
 		strcpy(fileWN, getenv("WORDSNOT"));
-	}
-	if (getenv("MAXUSERS") != NULL) {
+	if (getenv("MAXUSERS") != NULL) 
 		maxusers = atoi(getenv("MAXUSERS"));
-	}
 
 	pthread_t* threads;
 	threads = (pthread_t*)malloc(sizeof(pthread_t) * THREADS);
@@ -318,7 +316,7 @@ int main(int argc, char* argv[]) {
 
 	FLAG_MENSAGENSATUALIZA = 0;
 	settings();
-	comandosmenu();
+	comandosMenu();
 	iniciaVerificador();
 
 	do {
@@ -352,13 +350,13 @@ int main(int argc, char* argv[]) {
 					if (r == sizeof(Login) && cli.acesso == 1) {
 						sprintf(fifo_name, FIFO_CLI, cli.remetente);
 						fd_cli = open(fifo_name, O_WRONLY | O_NONBLOCK);
-						while (existecliente(clientes, cli.nome)) {
+						while (existeCliente(clientes, cli.nome)) {
 							adicionaNome++;
 							char adiciona[20];
 							adiciona[0] = adicionaNome + '0';
 							strcat(cli.nome, adiciona);
 						}
-						if ((s.ncliativos + 1 <= maxusers) && adicionacliente(clientes, &numcli, cli) == 0) {
+						if ((s.ncliativos + 1 <= maxusers) && adicionaCliente(clientes, &numcli, cli) == 0) {
 							s.ncliativos++;
 							for (int i = 0; i < maxusers; i++) {
 								if (listaUsers[i] == -1) {
@@ -372,9 +370,7 @@ int main(int argc, char* argv[]) {
 
 						write(fd_cli, &s.nmensagensreais, sizeof(int));
 						for (int i = 0; i < s.nmensagensreais; i++)
-						{
 							res = write(fd_cli, &mensagens[i], sizeof(Msg));
-						}
 
 						close(fd_cli);
 					}
@@ -384,7 +380,7 @@ int main(int argc, char* argv[]) {
 						if (listaUsers[i] == cli.remetente) {
 							listaUsers[i] = -1;
 							s.ncliativos--;
-							eliminacliente(clientes, &numcli, cli.remetente);
+							eliminaCliente(clientes, &numcli, cli.remetente);
 							fprintf(stderr, "\n[Cliente %d a terminar]\n", cli.remetente);
 						}
 				}
@@ -417,14 +413,10 @@ int main(int argc, char* argv[]) {
 				fd_cli = open(fifo_name, O_WRONLY | O_NONBLOCK);
 				write(fd_cli, &s.nmensagensreais, sizeof(int));
 				for (int i = 0; i < s.nmensagensreais; i++)
-				{
 					res = write(fd_cli, &mensagens[i], sizeof(Msg));
-				}
 				write(fd_cli, &s.ntopicos, sizeof(int));
 				for (int i = 0; i < s.ntopicos; i++)
-				{
 					res = write(fd_cli, &topicos[i], sizeof(Topic));
-				}
 				fprintf(stderr, "\n[Atualizacao feita no cliente %d]\n\n", cli.remetente);
 				close(fd_cli);
 			}
@@ -445,7 +437,7 @@ int main(int argc, char* argv[]) {
 				}
 
 				if (strcmp(comando, "filter") == 0 && comandoAux != NULL) {
-					printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
+					printf("\n%s %s\n", comando, comandoAux[1]);
 
 					if (strcmp(comandoAux[1], "on") == 0)
 						FLAG_FILTER = 1;
@@ -462,18 +454,18 @@ int main(int argc, char* argv[]) {
 					listaTopicos(mensagens);
 				}
 				else if (strcmp(comando, "msg") == 0 && comandoAux[1] == NULL) {//LISTAR MENSAGENS
-					printf("Lista de mensagens:\n");
+					printf("\nLista de mensagens:\n");
 					listaMensagens(mensagens);
 				}
 				else if (strcmp(comando, "topic") == 0 && comandoAux[1] != NULL) {//LISTAR MENSAGENS DESTE TOPICO
-					printf("Topico: %s\n", comandoAux[1]);
+					printf("\nTopico: %s\n", comandoAux[1]);
 					mensagensTopico(mensagens, comandoAux[1]);
 				}
 				else if (strcmp(comando, "del") == 0 && comandoAux != NULL) {//APAGAR MENSAGEM
-					printf("Introduziu comando %s %s\n", comando, comandoAux[1]);
+					printf("\nIntroduziu comando %s %s\n", comando, comandoAux[1]);
 					int v = atoi(comandoAux[1]);
 					if (apagarMensagem(mensagens, v)) {
-						printf("Mensagem apagada com sucesso!\n");
+						printf("\nMensagem apagada com sucesso!\n");
 						mandaAtualizar(listaUsers);
 					}
 				}
@@ -484,7 +476,7 @@ int main(int argc, char* argv[]) {
 								if (listaUsers[i] == clientes[i].remetente) {
 									listaUsers[i] = -1;
 									s.ncliativos--;
-									eliminacliente(clientes, &numcli, clientes[i].remetente);
+									eliminaCliente(clientes, &numcli, clientes[i].remetente);
 									fprintf(stderr, "\n[Cliente %d a terminar]\n", clientes[i].remetente);
 									kill(clientes[i].remetente, SIGINT);
 								}
@@ -501,14 +493,13 @@ int main(int argc, char* argv[]) {
 						mandaAtualizar(listaUsers);
 				}
 				else if (strcmp(comando, "help") == 0 && comandoAux[1] == NULL)
-					comandosmenu();
+					comandosMenu();
 				else if (strcmp(comando, "mensagem") == 0 && comandoAux != NULL) {//Enviar mensagem ao verificador
-					printf("Mensagem: %s\n", comandoAux[1]);
+					printf("\nMensagem: %s\n", comandoAux[1]);
 					chamaVerificador(comandoAux[1]);	//NAO ESTA A DAR CERTO
 				}
-				else {
+				else if(strcmp(comando, " ")==0)
 					printf("\n[ERRO] Comando invalido!\n");
-				}
 			}
 			else if (res == 0) {
 				fprintf(stderr, "TIMEOUT\n\n");
@@ -525,6 +516,12 @@ int main(int argc, char* argv[]) {
 	free(threads);
 
 	terminaVerificador();
+	
+	for (int i = 0; i < maxusers; i++) {
+		if (listaUsers[i] != -1) {
+			kill(listaUsers[i], SIGINT);
+		}
+	}
 
 	remove(FIFO_SERV);
 	close(fd_ser);
@@ -532,12 +529,6 @@ int main(int argc, char* argv[]) {
 	remove(FIFO_ATU);
 	close(fd_atu);
 	unlink(FIFO_ATU);
-
-	for (int i = 0; i < maxusers; i++) {
-		if (listaUsers[i] != -1) {
-			kill(listaUsers[i], SIGINT);
-		}
-	}
-
+	
 	return EXIT_SUCCESS;
 }

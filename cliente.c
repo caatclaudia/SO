@@ -21,6 +21,7 @@ Login cli;
 Topic topicos[50];
 int ntopicos;
 int totalMensagens;
+int FLAG_ATUALIZA;
 
 int scanfInteiro() {
 	int inteiro, fim = 0;
@@ -272,6 +273,7 @@ int calculaIndice(int inicio, int y, int x) {
 	return ind;
 }
 
+//FIFO
 int fd_cli;
 char fifo_name[20];
 
@@ -298,8 +300,6 @@ void sair(int n) {
 void trataSig(int i) {
 	sair(i);
 }
-
-int FLAG_ATUALIZA;
 
 void trataSigAtu(int i) {
 	FLAG_ATUALIZA = 1;
