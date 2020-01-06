@@ -9,9 +9,12 @@
 
 #define THREADS nmaxmsg
 
-Topic topicos[50];
+Topic *topicos;
+Msg *mensagens;
+Login *clientes;
 Server s;
 int FLAG_MENSAGENSATUALIZA;
+int FLAG_SHUTDOWN;
 
 void comandosMenu() {
 	printf("=========Configuracoes=========\n");
@@ -87,44 +90,43 @@ int chamaVerificador(char frase[]) {
 	return pal;
 }
 
-int adicionaCliente(Login m[], int* n, Login c) {
+int adicionaCliente(int* n, Login c) {
 	int i;
-	for (i = 0; i < *n && strcmp(c.nome, m[i].nome) != 0; i++);
+	for (i = 0; i < *n && strcmp(c.nome, clientes[i].nome) != 0; i++);
 	if (i == *n) {
-		m[*n] = c;
+		clientes[*n] = c;
 		(*n)++;
 		return 0;
 	}
 	return 1;
 }
 
-int existeCliente(Login m[], char nome[]) {
+int existeCliente(char nome[]) {
 	int i;
 	for (i = 0; i < s.ncliativos; i++) {
-		if (strcmp(m[i].nome, nome) == 0)
+		if (strcmp(clientes[i].nome, nome) == 0)
 			return 1;
 	}
 	return 0;
 }
 
-void eliminaCliente(Login m[], int* n, int pid) {
+void eliminaCliente(int* n, int pid) {
 	int i;
-	for (i = 0; i < *n && m[i].remetente != pid; i++);
+	for (i = 0; i < *n && clientes[i].remetente != pid; i++);
 	if (i != *n) {
-		m[i] = m[*n - 1];
+		clientes[i] = clientes[*n - 1];
 		(*n)--;
 	}
 	return;
 }
 
-void iniciaMensagens(Msg mensagens[]) {
+void iniciaMensagens() {
 	for (int i = 0; i < nmaxmsg; i++) {
 		mensagens[i].remetente = -1;
 		strcpy(mensagens[i].corpo, " ");
 		strcpy(mensagens[i].topico, " ");
 		strcpy(mensagens[i].titulo, " ");
 		mensagens[i].duracao = -1;
-		mensagens[i].termina = 0;
 	}
 	s.ntopicos = 0;
 	s.nmensagens = 0;
@@ -144,14 +146,14 @@ void adicionaTopico(char topico[]) {
 	return;
 }
 
-void adicionaMensagem(Msg mensagens[], Msg msg) {
+void adicionaMensagem(Msg msg) {
 	mensagens[s.nmensagensreais] = msg;
 	adicionaTopico(msg.topico);
 	s.nmensagensreais++;
 	s.nmensagens++;
 }
 
-void mensagensTopico(Msg mensagens[], char topico[]) {
+void mensagensTopico(char topico[]) {
 	int EXISTE = 0;
 	for (int i = 0; i < s.nmensagensreais; i++) {
 		if (strcmp(mensagens[i].topico, topico) == 0) {
@@ -165,7 +167,7 @@ void mensagensTopico(Msg mensagens[], char topico[]) {
 	return;
 }
 
-void listaMensagens(Msg mensagens[]) {
+void listaMensagens() {
 	int i;
 	for (i = 0; i < s.nmensagensreais; i++) {
 		printf("   Mensagem %d - Topico: %s\n", mensagens[i].resposta, mensagens[i].topico);
@@ -177,7 +179,7 @@ void listaMensagens(Msg mensagens[]) {
 	return;
 }
 
-int apagarMensagem(Msg mensagens[], int ind) {
+int apagarMensagem(int ind) {
 	if (ind > s.nmensagensreais || ind < 0) {
 		printf("Esta mensagem nao existe!\n");
 		return 0;
@@ -191,21 +193,23 @@ int apagarMensagem(Msg mensagens[], int ind) {
 	strcpy(mensagens[s.nmensagensreais - 1].topico, " ");
 	strcpy(mensagens[s.nmensagensreais - 1].titulo, " ");
 	mensagens[s.nmensagensreais - 1].duracao = -1;
-	mensagens[s.nmensagensreais - 1].termina = 0;
 	s.nmensagensreais--;
 	return 1;
 }
 
-void eliminaMensagemTempo(Msg mensagens[]) {
+int eliminaMensagemTempo() {
 	int apaga[s.nmensagensreais], num = 0, i;
 	for (i = 0; i < s.nmensagensreais; i++)
-		if (mensagens[i].termina == 1) {
+		if (mensagens[i].duracao == 0) {
+			fprintf(stderr, "\n[Mensagem %d ja nao esta disponivel!]", mensagens[i].resposta);
 			apaga[num] = i;
 			num++;
 		}
 	for (i = num - 1; i >= 0; i--)
-		apagarMensagem(mensagens, apaga[i]);
-	return;
+		apagarMensagem(apaga[i]);
+	if(num==0)
+		return 0;
+	return 1;
 }
 
 void listaTopicos() {
@@ -219,7 +223,7 @@ void listaTopicos() {
 	return;
 }
 
-int apagarTopicosSemMensagens(Msg mensagens[]) {
+int apagarTopicosSemMensagens() {
 	int EXISTE = 0;
 	int apaga[s.ntopicos], apagaN = 0;
 	for (int i = 0; i < s.ntopicos; i++) {
@@ -248,25 +252,26 @@ int apagarTopicosSemMensagens(Msg mensagens[]) {
 }
 
 void* func(void* dados) {
-	Msg* d;
-	d = (Msg*)dados;
 
-	while (d->duracao > 0 && d->termina == 0) {
+	do{
+		for(int i=0; i<s.nmensagensreais; i++){
+			mensagens[i].duracao--;
+		}
+		if(eliminaMensagemTempo())
+			FLAG_MENSAGENSATUALIZA = 1;
+			
 		sleep(1);
-		d->duracao--;
-	}
-	d->termina = 1;
-	FLAG_MENSAGENSATUALIZA = 1;
-	fprintf(stderr, "\n[Mensagem %d ja nao esta disponivel!]", d->resposta);
-	fflush(stdout);
+	}while(!FLAG_SHUTDOWN);
 
 	pthread_exit(NULL);
 }
 
-void mandaAtualizar(int cl[]) {
+void mandaAtualizar(int cli[]) {
 	for (int i = 0; i < maxusers; i++) {
-		if (cl[i] != -1) {
-			kill(cl[i], SIGUSR1);
+		if (cli[i] != -1) {
+			kill(cli[i], SIGUSR1);
+			for(int i=0; i<s.nmensagensreais; i++)
+				mensagens[i].tempoI=0;
 		}
 	}
 	return;
@@ -275,12 +280,17 @@ void mandaAtualizar(int cl[]) {
 int main(int argc, char* argv[]) {
 	char comando[60], * comandoAux[500], fifo_name[20], fifo_name1[20];
 	int num, fd_ser, fd_cli, res, adicionaNome = 0, fd_atu, n;
-	int FLAG_SHUTDOWN = 0, FLAG_FILTER = 1;
+	int FLAG_FILTER = 1;
 	fd_set fontes;
-	Msg msg, mensagens[nmaxmsg];
+	Msg msg;
 	struct timeval t;
-	Login cli, clientes[maxusers];
+	Login cli;
 	int numcli = 0, r;
+	FLAG_SHUTDOWN = 0;
+	
+	topicos= (Topic *) malloc( MAXTOPICOS * sizeof(Topic));
+	mensagens=(Msg *) malloc(sizeof(Msg)*MAXMSG);
+	clientes=(Login *) malloc(sizeof(Login)*MAXUSERS);
 
 	int listaUsers[maxusers];
 	for (int i = 0; i < maxusers; i++)
@@ -310,7 +320,8 @@ int main(int argc, char* argv[]) {
 		maxusers = atoi(getenv("MAXUSERS"));
 
 	pthread_t* threads;
-	threads = (pthread_t*)malloc(sizeof(pthread_t) * THREADS);
+	threads = (pthread_t*)malloc(sizeof(pthread_t));
+	pthread_create(threads, NULL, (void*)func, NULL);
 	int nThreads = 0;
 	void* resultado;
 
@@ -335,10 +346,6 @@ int main(int argc, char* argv[]) {
 		if (FLAG_MENSAGENSATUALIZA) {
 			eliminaMensagemTempo(mensagens);
 			FLAG_MENSAGENSATUALIZA = 0;
-			for (int i = 0; i < s.nmensagensreais; i++) {
-				if (mensagens[i].termina == 1)
-					pthread_join(threads[mensagens[i].resposta], &resultado);
-			}
 			mandaAtualizar(listaUsers);
 		}
 		else {
@@ -350,13 +357,13 @@ int main(int argc, char* argv[]) {
 					if (r == sizeof(Login) && cli.acesso == 1) {
 						sprintf(fifo_name, FIFO_CLI, cli.remetente);
 						fd_cli = open(fifo_name, O_WRONLY | O_NONBLOCK);
-						while (existeCliente(clientes, cli.nome)) {
+						while (existeCliente(cli.nome)) {
 							adicionaNome++;
 							char adiciona[20];
 							adiciona[0] = adicionaNome + '0';
 							strcat(cli.nome, adiciona);
 						}
-						if ((s.ncliativos + 1 <= maxusers) && adicionaCliente(clientes, &numcli, cli) == 0) {
+						if ((s.ncliativos + 1 <= maxusers) && adicionaCliente(&numcli, cli) == 0) {
 							s.ncliativos++;
 							for (int i = 0; i < maxusers; i++) {
 								if (listaUsers[i] == -1) {
@@ -380,7 +387,7 @@ int main(int argc, char* argv[]) {
 						if (listaUsers[i] == cli.remetente) {
 							listaUsers[i] = -1;
 							s.ncliativos--;
-							eliminaCliente(clientes, &numcli, cli.remetente);
+							eliminaCliente(&numcli, cli.remetente);
 							fprintf(stderr, "\n[Cliente %d a terminar]\n", cli.remetente);
 						}
 				}
@@ -397,9 +404,7 @@ int main(int argc, char* argv[]) {
 							pal = chamaVerificador(msg.corpo);
 						if (pal <= 2) {
 							msg.resposta = s.nmensagens;
-							pthread_create(&threads[s.nmensagens], NULL, func, (void*)&mensagens[s.nmensagensreais]);
-
-							adicionaMensagem(mensagens, msg);
+							adicionaMensagem(msg);
 							mandaAtualizar(listaUsers);
 						}
 					}
@@ -466,14 +471,14 @@ int main(int argc, char* argv[]) {
 				}
 				else if (strcmp(comando, "topic") == 0 && comandoAux[1] != NULL) {//LISTAR MENSAGENS DESTE TOPICO
 					printf("\nTopico: %s\n", comandoAux[1]);
-					mensagensTopico(mensagens, comandoAux[1]);
+					mensagensTopico(comandoAux[1]);
 				}
 				else if (strcmp(comando, "del") == 0 && comandoAux != NULL) {//APAGAR MENSAGEM
 					printf("\nIntroduziu comando %s %s\n", comando, comandoAux[1]);
 					int v = atoi(comandoAux[1]);
 					for(int i=0; i<s.nmensagensreais; i++){
 						if(v==mensagens[i].resposta){
-							apagarMensagem(mensagens, i);
+							apagarMensagem(i);
 							printf("\nMensagem apagada com sucesso!\n");
 							mandaAtualizar(listaUsers);
 						}
@@ -486,7 +491,7 @@ int main(int argc, char* argv[]) {
 								if (listaUsers[i] == clientes[i].remetente) {
 									listaUsers[i] = -1;
 									s.ncliativos--;
-									eliminaCliente(clientes, &numcli, clientes[i].remetente);
+									eliminaCliente(&numcli, clientes[i].remetente);
 									fprintf(stderr, "\n[Cliente %d a terminar]\n", clientes[i].remetente);
 									kill(clientes[i].remetente, SIGINT);
 								}
@@ -499,7 +504,7 @@ int main(int argc, char* argv[]) {
 				}
 				else if (strcmp(comando, "prune") == 0 && comandoAux[1] == NULL) {//APAGAR TOPICOS SEM MENSAGENS
 					printf("\nApagando topicos sem mensagens!\n");
-					if (apagarTopicosSemMensagens(mensagens))
+					if (apagarTopicosSemMensagens())
 						mandaAtualizar(listaUsers);
 				}
 				else if (strcmp(comando, "help") == 0 && comandoAux[1] == NULL)
@@ -517,11 +522,6 @@ int main(int argc, char* argv[]) {
 			}
 		}
 	} while (FLAG_SHUTDOWN != 1);
-
-	for (int i = 0; i < s.nmensagensreais; i++) {
-		mensagens[i].termina = 1;
-		pthread_join(threads[mensagens[i].resposta], &resultado);
-	}
 
 	free(threads);
 

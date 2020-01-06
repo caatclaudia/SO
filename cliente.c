@@ -18,7 +18,8 @@
 #define TECLA_ENTER 10
 
 Login cli;
-Topic topicos[50];
+Topic *topicos;
+Msg *mensagens;
 int ntopicos;
 int totalMensagens;
 int FLAG_ATUALIZA;
@@ -52,14 +53,13 @@ void menu() {
 	return;
 }
 
-void iniciaMensagens(Msg mensagens[]) {
+void iniciaMensagens() {
 	for (int i = 0; i < nmaxmsg; i++) {
 		mensagens[i].remetente = -1;
 		strcpy(mensagens[i].corpo, " ");
 		strcpy(mensagens[i].topico, " ");
 		strcpy(mensagens[i].titulo, " ");
 		mensagens[i].duracao = -1;
-		mensagens[i].termina = 0;
 	}
 	ntopicos = 0;
 	totalMensagens = 0;
@@ -74,7 +74,7 @@ void adicionaTopico(char topico[]) {
 	strcpy(topicos[ntopicos - 1].nome, topico);
 }
 
-void adicionaMensagem(Msg mensagens[], Msg msg) {
+void adicionaMensagem(Msg msg) {
 	mensagens[totalMensagens - 1] = msg;
 	adicionaTopico(msg.topico);
 	return;
@@ -106,7 +106,7 @@ void apagaTopicos() {
 	return;
 }
 
-void titulosTopico(Msg mensagens[], char topico[]) {
+void titulosTopico(char topico[]) {
 	int EXISTE = 0, s = MEIO + 1;
 	for (int i = 0; i < totalMensagens; i++) {
 		if (strcmp(mensagens[i].topico, topico) == 0) {
@@ -125,17 +125,17 @@ void titulosTopico(Msg mensagens[], char topico[]) {
 	return;
 }
 
-void consultarTitulos(Msg mensagens[]) {
+void consultarTitulos() {
 	char topico[20];
 	mvprintw(MEIO + 1, 0, "Topico>> ");
 	refresh();
 	getstr(topico);
 
-	titulosTopico(mensagens, topico);
+	titulosTopico(topico);
 	return;
 }
 
-void mensagensTopico(Msg mensagens[], char topico[]) {
+void mensagensTopico(char topico[]) {
 	int EXISTE = 0, s = MEIO + 1;
 	for (int i = 0; i < totalMensagens; i++) {
 		if (strcmp(mensagens[i].topico, topico) == 0) {
@@ -155,13 +155,13 @@ void mensagensTopico(Msg mensagens[], char topico[]) {
 	return;
 }
 
-void consultarMensagem(Msg mensagens[]) {
+void consultarMensagem() {
 	char topico[20];
 	mvprintw(MEIO + 1, 0, "Topico>> ");
 	refresh();
 	getstr(topico);
 
-	mensagensTopico(mensagens, topico);
+	mensagensTopico(topico);
 	return;
 }
 
@@ -309,14 +309,16 @@ int main(int argc, char* argv[]) {
 	int ntopicos = 0;
 	char nome[20], fifo_name1[20];
 	int fd_ser, op, res, fd_atu;
-	Msg mensagens[nmaxmsg];
 
 	struct sigaction act;
 	act.sa_handler = sair;
 	act.sa_flags = 0;
 	sigaction(SIGALRM, &act, NULL);
+	
+	topicos= (Topic *) malloc( MAXTOPICOS * sizeof(Topic));
+	mensagens=(Msg *) malloc(sizeof(Msg)*MAXMSG);
 
-	iniciaMensagens(mensagens);
+	iniciaMensagens();
 
 	if (argc != 2) {
 		printf("\n[ERRO] Falta o nome de utilizador!\n");
@@ -395,7 +397,7 @@ int main(int argc, char* argv[]) {
 			read(fd_cli, &totalMensagens, sizeof(int));
 			for (int i = 0; i < totalMensagens; i++) {
 				read(fd_cli, &mensagens[i], sizeof(Msg));
-				if (subscreveEsteTopico(mensagens[i].topico))
+				if (subscreveEsteTopico(mensagens[i].topico) && mensagens[i].tempoI==1)
 					mvprintw(MEIO - 1, 0, "Nova mensagem %s do topico %s disponivel durante %d s!",
 						mensagens[i].titulo, mensagens[i].topico, mensagens[i].duracao);
 				refresh();
@@ -417,7 +419,6 @@ int main(int argc, char* argv[]) {
 			int i = s;
 			mvprintw(i++, 0, "--Escrever mensagem nova--");
 			Msg nova;
-			nova.termina = 0;
 			nova.remetente = getpid();
 			nova.resposta = -1;
 			i++;
@@ -433,6 +434,7 @@ int main(int argc, char* argv[]) {
 			refresh();
 			nova.duracao = scanfInteiro();
 			mvprintw(i - 1, 10, "%d         ", nova.duracao);
+			nova.tempoI=1;
 
 			mvprintw(i++, 0, "Corpo>> ");
 			refresh();
@@ -497,7 +499,7 @@ int main(int argc, char* argv[]) {
 				mvprintw(FIM + 1, 0, "Mensagem nao foi guardada!");
 			else {
 				totalMensagens++;
-				adicionaMensagem(mensagens, nova);
+				adicionaMensagem(nova);
 				mvprintw(FIM + 1, 0, "Mensagem %d guardada!", nova.resposta);
 			}
 			refresh();
@@ -506,10 +508,10 @@ int main(int argc, char* argv[]) {
 			listaTopicos();
 		}
 		else if (op == 3) {//CONSULTAR TITULOS DE UM TOPICO
-			consultarTitulos(mensagens);
+			consultarTitulos();
 		}
 		else if (op == 4) {//CONSULTAR MENSAGEM DE UM TOPICO
-			consultarMensagem(mensagens);
+			consultarMensagem();
 		}
 		else if (op == 5) {//SUBSCREVER/CANCELAR SUBSCRICAO DE TOPICO
 			subscreverOuCancelar();

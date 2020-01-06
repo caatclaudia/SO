@@ -14,6 +14,7 @@ char fileWN[20] = "palavras.txt";
 #define NLINHAS 15
 #define NCOLUNAS 67
 #define NULTIMCOLUNAS 62
+#define MAXTOPICOS 50
 
 #define FIFO_SERV "SERV"
 #define FIFO_CLI "CLI%d"
@@ -45,5 +46,5 @@ typedef struct mensagem {
 	int duracao;
 	int resposta;
 	int remetente;
-	int termina;
+	int tempoI;
 }Msg;
