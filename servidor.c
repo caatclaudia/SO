@@ -7,8 +7,6 @@
 #include<pthread.h>
 #include"header.h"
 
-#define THREADS nmaxmsg
-
 Topic *topicos;
 Msg *mensagens;
 Login *clientes;
@@ -270,8 +268,6 @@ void mandaAtualizar(int cli[]) {
 	for (int i = 0; i < maxusers; i++) {
 		if (cli[i] != -1) {
 			kill(cli[i], SIGUSR1);
-			for(int i=0; i<s.nmensagensreais; i++)
-				mensagens[i].tempoI=0;
 		}
 	}
 	return;
@@ -423,7 +419,9 @@ int main(int argc, char* argv[]) {
 				for (int i = 0; i < s.ntopicos; i++)
 					res = write(fd_cli, &topicos[i], sizeof(Topic));
 				fprintf(stderr, "\n[Atualizacao feita no cliente %d]\n\n", cli.remetente);
-				close(fd_cli);
+				close(fd_cli);				
+				for(int i=0; i<s.nmensagensreais; i++)
+					mensagens[i].tempoI=0;
 			}
 			else if (res > 0 && FD_ISSET(0, &fontes)) {		//TECLADO
 				fgets(comando, 60, stdin);
@@ -511,7 +509,7 @@ int main(int argc, char* argv[]) {
 					comandosMenu();
 				else if (strcmp(comando, "mensagem") == 0 && comandoAux != NULL) {//Enviar mensagem ao verificador
 					printf("\nMensagem: %s\n", comandoAux[1]);
-					chamaVerificador(comandoAux[1]);	//NAO ESTA A DAR CERTO
+					chamaVerificador(comandoAux[1]);
 				}
 				else if(strcmp(comando, " ")==0)
 					printf("\n[ERRO] Comando invalido!\n");
