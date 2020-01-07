@@ -16,6 +16,7 @@
 #define TECLA_SETA_LEFT 4
 #define TECLA_SETA_RIGHT 5
 #define TECLA_ENTER 10
+#define TECLA_DELETE 127
 
 Login cli;
 Topic *topicos;
@@ -471,6 +472,12 @@ int main(int argc, char* argv[]) {
 						move(y, x);
 						refresh();
 					}
+				}
+				else if (ch == TECLA_DELETE) { // TECLA ENTER IMPRIME ??
+					x--;
+					move(y, x);
+					nova.corpo[x] = ' ';
+					refresh();
 				}
 				else {
 					int ind = calculaIndice(i, y, x);
